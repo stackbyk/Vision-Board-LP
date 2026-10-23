@@ -15,7 +15,7 @@ function getVideoConfig(value) {
     id = url.pathname === '/watch' ? url.searchParams.get('v') : ['embed', 'shorts', 'live'].includes(parts[1]) ? parts[2] : null;
   }
   if (id && /^[\w-]{11}$/.test(id)) {
-    return { type: 'youtube', src: `https://www.youtube-nocookie.com/embed/${id}?controls=1&playsinline=1&rel=0` };
+    return { type: 'youtube', src: `https://www.youtube.com/embed/${id}?autoplay=1&rel=0&playsinline=1&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}` };
   }
   if (/\.mp4$/i.test(url.pathname)) return { type: 'mp4', src: url.href };
   return null;
@@ -28,7 +28,7 @@ function renderWorkshopVideo(value) {
   const player = document.createElement(config.type === 'youtube' ? 'iframe' : 'video');
   if (config.type === 'youtube') {
     player.title = 'Workshop Preview';
-    player.allow = 'accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen';
+    player.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
     player.allowFullscreen = true;
     player.referrerPolicy = 'strict-origin-when-cross-origin';
   } else {

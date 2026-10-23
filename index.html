@@ -10,6 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400&family=DM+Serif+Display&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="testimonials.css">
 </head>
 <body>
   <div class="announcement">Small batch. Limited seats. Book your Vision Board Workshop now.</div>
@@ -39,6 +40,17 @@
       <li><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M10 5h21v29H10zM15 15h12M15 21h12M15 27h9"/></svg><span>Leave With a Ready Board</span></li>
     </ul>
   </main>
+  <section class="testimonials" aria-labelledby="testimonials-title">
+    <div class="testimonials-inner">
+      <header><h2 id="testimonials-title">Testimonials</h2><p>See what our participants have to say</p></header>
+      <div class="testimonial-videos" role="region" aria-label="Video testimonials">
+        <button class="video-nav video-prev" type="button" aria-label="Previous testimonial videos">‹</button>
+        <div class="testimonial-stage" id="testimonial-stage" tabindex="0" aria-label="Testimonial video list"></div>
+        <button class="video-nav video-next" type="button" aria-label="Next testimonial videos">›</button>
+      </div>
+      <div class="testimonial-reviews" id="testimonial-reviews" aria-label="Participant reviews"></div>
+    </div>
+  </section>
   <dialog id="booking-dialog" aria-labelledby="booking-title">
     <h2 id="booking-title">Create My Vision Board</h2>
     <p>Workshop booking details will be available here soon.</p>
@@ -46,5 +58,6 @@
   </dialog>
   <script src="script.js"></script>
   <script src="video.js"></script>
+  <script src="testimonials.js"></script>
 </body>
 </html>
