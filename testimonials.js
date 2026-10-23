@@ -1,4 +1,4 @@
-// Add or edit video entries here: { name, youtubeUrl, title: "Optional title" }. No fixed limit.
+// Add or edit video entries here: { name, youtubeUrl, title: "Optional title", thumbnail: "Optional image URL" }. No fixed limit.
 const videoTestimonials = [
   {
     name: "Avatika Pandey",
@@ -6,26 +6,32 @@ const videoTestimonials = [
   },
   {
     name: "Shreya Agarwal",
-    youtubeUrl: "",
+    youtubeUrl: "https://youtube.com/shorts/RA2P5Gp5GLg?si=VjmejFoGgtHGvHPN",
   },
   {
     name: "Jaiveer Shekhawat",
-    youtubeUrl: "",
+    youtubeUrl: "https://youtube.com/shorts/ujvuqiqUAC8?si=M7QANtPXoEGP-Oc9",
   },
   {
     name: "Piyush",
-    youtubeUrl: "",
+    youtubeUrl: "https://youtube.com/shorts/c7co7upeyMo?si=IJcNA9qUUch21woC",
   },
-  { name: "Person 5", youtubeUrl: "" },
-  { name: "Person 6", youtubeUrl: "" },
+  {
+    name: "Disha Atolia",
+    youtubeUrl: "https://youtube.com/shorts/Q0Oq_5U1Fd4?si=bySDa8JuKF2uuS5a",
+  },
+  {
+    name: "Vivek Vardhan",
+    youtubeUrl: "https://youtube.com/shorts/RLUwjR7e3CI?si=mjjZ0wqcuiji5N2Q",
+  },
 ];
 // Edit reviews here. Put photos in avatars/ and set avatar: 'avatars/name.jpg'.
 const writtenTestimonials = [
   {
-    quote: "Add review here",
-    name: "Person Name",
-    role: "Role @ Company",
-    avatar: "",
+    quote: "Shraddha has made possible for me to visualise and reflect on my goals for the year. The workshop on Vision board clearly is a banger, and the follow up sessions within the community keeps you going. I would surely recommend anyone to attend her workshops and bring a positive change in their life.",
+    name: "Ramneet Singh",
+    role: "Founder @ Augmntdd. Media",
+    avatar: "avatars/ramneet.jpg"
   },
   {
     quote: "Add review here",
@@ -63,6 +69,7 @@ const writtenTestimonials = [
   const stage = document.querySelector("#testimonial-stage");
   const personIcon =
     '<svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="10" r="6"/><path d="M4 30v-4a12 12 0 0 1 24 0v4z"/></svg>';
+  let stopCurrentVideo = null;
   videoTestimonials.forEach((item) => {
     const card = document.createElement("figure");
     card.className = "testimonial-video";
@@ -73,10 +80,25 @@ const writtenTestimonials = [
     if (config?.type === "youtube") {
       const id = config.src.split("/embed/")[1].split("?")[0];
       const thumbnail = document.createElement("img");
-      thumbnail.src = `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
+      thumbnail.src =
+        item.thumbnail || `https://img.youtube.com/vi/${id}/maxresdefault.jpg`;
       thumbnail.alt = `Video testimonial from ${label}`;
       thumbnail.loading = "lazy";
-      thumbnail.addEventListener("error", () => thumbnail.remove());
+      let thumbnailLevel = item.thumbnail ? 0 : 1;
+      const useFallback = () => {
+        if (thumbnailLevel === 0) {
+          thumbnailLevel = 1;
+          thumbnail.src = `https://img.youtube.com/vi/${id}/maxresdefault.jpg`;
+        } else if (thumbnailLevel === 1) {
+          thumbnailLevel = 2;
+          thumbnail.src = `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
+        } else thumbnail.remove();
+      };
+      thumbnail.addEventListener("error", useFallback);
+      thumbnail.addEventListener("load", () => {
+        if (thumbnailLevel === 1 && thumbnail.naturalWidth <= 120)
+          useFallback();
+      });
       media.append(thumbnail);
     }
     const play = document.createElement(
@@ -89,6 +111,8 @@ const writtenTestimonials = [
       play.type = "button";
       play.setAttribute("aria-label", `Play testimonial from ${label}`);
       play.addEventListener("click", () => {
+        if (stopCurrentVideo) stopCurrentVideo();
+        const previewNodes = [...media.childNodes];
         const iframe = document.createElement("iframe");
         iframe.src = config.src;
         iframe.title = item.title || `Video testimonial from ${label}`;
@@ -98,20 +122,33 @@ const writtenTestimonials = [
         iframe.referrerPolicy = "strict-origin-when-cross-origin";
         // Keep the fallback available: cross-origin player errors do not
         // reliably trigger the iframe element's error event.
-        const fallback = document.createElement('a');
-        fallback.className = 'testimonial-youtube-fallback';
+        const fallback = document.createElement("a");
+        fallback.className = "testimonial-youtube-fallback";
         fallback.href = item.youtubeUrl;
-        fallback.target = '_blank';
-        fallback.rel = 'noopener noreferrer';
-        fallback.textContent = 'Watch on YouTube';
-        iframe.addEventListener('error', () => iframe.remove());
-        media.classList.add('has-youtube-player');
-        media.replaceChildren(iframe, fallback);
+        fallback.target = "_blank";
+        fallback.rel = "noopener noreferrer";
+        fallback.textContent = "Watch on YouTube";
+        iframe.addEventListener("error", () => iframe.remove());
+        media.classList.add("has-youtube-player");
+        media.replaceChildren(iframe);
+        const caption = card.querySelector("figcaption");
+        if (caption) caption.after(fallback);
+        else card.append(fallback);
+        stopCurrentVideo = () => {
+          media.replaceChildren(...previewNodes);
+          media.classList.remove("has-youtube-player");
+          fallback.remove();
+          stopCurrentVideo = null;
+        };
       });
     } else {
       media.setAttribute("role", "img");
       media.setAttribute("aria-label", `Video placeholder for ${label}`);
       play.setAttribute("aria-hidden", "true");
+      const emptyLabel = document.createElement("span");
+      emptyLabel.className = "testimonial-empty-label";
+      emptyLabel.textContent = "Add video link";
+      media.append(emptyLabel);
     }
     media.append(play);
     card.append(media);
@@ -130,19 +167,85 @@ const writtenTestimonials = [
   });
   const previous = document.querySelector(".video-prev");
   const next = document.querySelector(".video-next");
-  function updateNavigation() {
-    previous.disabled = stage.scrollLeft < 2;
-    next.disabled =
-      stage.scrollLeft + stage.clientWidth >= stage.scrollWidth - 2;
-  }
-  function navigate(direction) {
+  const dots = document.createElement("div");
+  dots.className = "video-pagination";
+  dots.setAttribute("aria-label", "Video pages");
+  stage.parentElement.append(dots);
+  function pagePositions() {
+    const count = Math.max(
+      1,
+      parseInt(
+        getComputedStyle(stage.parentElement).getPropertyValue(
+          "--visible-videos",
+        ),
+      ) || 1,
+    );
     const gap = parseFloat(getComputedStyle(stage).columnGap) || 0;
-    stage.scrollBy({
-      left: direction * (stage.clientWidth + gap),
+    const step =
+      (stage.firstElementChild?.getBoundingClientRect().width || 0) + gap;
+    const maximum = Math.max(0, stage.scrollWidth - stage.clientWidth);
+    const positions = [0];
+    for (let i = count; i < videoTestimonials.length; i += count) {
+      const position = Math.min(i * step, maximum);
+      if (position > positions[positions.length - 1] + 2)
+        positions.push(position);
+    }
+    return positions;
+  }
+  function currentPage(positions) {
+    return positions.reduce(
+      (best, position, index) =>
+        Math.abs(position - stage.scrollLeft) <
+        Math.abs(positions[best] - stage.scrollLeft)
+          ? index
+          : best,
+      0,
+    );
+  }
+  function goTo(position) {
+    if (stopCurrentVideo) stopCurrentVideo();
+    stage.scrollTo({
+      left: position,
       behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
         ? "instant"
         : "smooth",
     });
+  }
+  function updateNavigation() {
+    stage.parentElement.style.setProperty(
+      "--video-center",
+      `${8 + (stage.querySelector(".testimonial-media")?.getBoundingClientRect().height || 0) / 2}px`,
+    );
+    const positions = pagePositions();
+    previous.disabled = next.disabled = positions.length < 2;
+    if (dots.children.length !== positions.length) {
+      dots.replaceChildren(
+        ...positions.map((_, index) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.setAttribute("aria-label", `Go to video page ${index + 1}`);
+          button.addEventListener("click", () =>
+            goTo(pagePositions()[index] || 0),
+          );
+          return button;
+        }),
+      );
+    }
+    [...dots.children].forEach((button, index) =>
+      button.setAttribute(
+        "aria-current",
+        String(index === currentPage(positions)),
+      ),
+    );
+  }
+  function navigate(direction) {
+    const positions = pagePositions();
+    goTo(
+      positions[
+        (currentPage(positions) + direction + positions.length) %
+          positions.length
+      ],
+    );
   }
   previous.addEventListener("click", () => navigate(-1));
   next.addEventListener("click", () => navigate(1));
