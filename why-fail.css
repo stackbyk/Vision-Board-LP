@@ -1,0 +1,46 @@
+.why-fail { padding: 80px 24px; background: #FFFFFF; color: #472C7D; font-family: 'DM Sans', sans-serif; }
+.why-fail-header { max-width: 1100px; margin: auto; text-align: center; }
+.why-fail h2 { font-family: 'DM Sans', sans-serif; font-size: clamp(34px, 4vw, 56px); font-weight: 600; line-height: 1.15; letter-spacing: -.025em; }
+.why-fail-header p { margin-top: 12px; font-size: 20px; line-height: 1.5; color: #1F1B3A; }
+.why-fail-rows { max-width: 900px; margin: 56px auto 0; padding: 0; list-style: none; display: grid; gap: 16px; }
+.why-fail-row { display: grid; grid-template-columns: minmax(0, 38fr) minmax(0, 62fr); align-items: start; gap: 40px; }
+.why-fail-problem { display: flex; align-items: flex-start; gap: 16px; position: relative; padding-top: 21px; font-size: 22px; font-weight: 600; line-height: 1.35; }
+.why-fail-problem::after { content: ''; position: absolute; left: 100%; top: calc(21px + .675em); width: 40px; height: 1px; background: #E5D8FF; }
+.why-fail-number { flex: 0 0 40px; width: 40px; height: 40px; margin-top: -5.15px; display: grid; place-items: center; border-radius: 50%; background: #E5D8FF; font-size: 13px; font-weight: 500; }
+.why-fail-problem-text { padding-right: 12px; }
+.why-fail-solution { min-width: 0; padding: 20px 24px; border: 1px solid #E5D8FF; border-radius: 14px; background: #F6F2FD; transition: background 250ms ease, border-color 250ms ease, box-shadow 250ms ease; }
+.why-fail-solution:hover, .why-fail-solution:focus-visible { background: #FEFCFF; border-color: #CC88FF; box-shadow: 0 8px 24px rgb(71 44 125 / .12); }
+.why-fail-solution:focus-visible, .why-fail-button:focus-visible { outline: 3px solid #472C7D; outline-offset: 4px; }
+.why-fail-solution-heading { display: flex; align-items: flex-start; gap: 12px; font-size: 22px; font-weight: 600; line-height: 1.35; }
+.why-fail-icon { flex: 0 0 24px; width: 24px; height: 24px; margin-top: 3px; fill: none; stroke: #472C7D; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+.why-fail-description { margin: 8px 0 0 36px; font-size: 18px; line-height: 1.5; }
+.why-fail-action { text-align: center; margin-top: 56px; }
+.why-fail-button { display: inline-flex; align-items: center; justify-content: center; gap: 10px; max-width: 100%; padding: 16px 32px; border-radius: 12px; background: #E1FB62; color: #1F1B3A; font-size: 18px; font-weight: 500; line-height: 1.5; text-decoration: none; transition: background 250ms ease, transform 250ms ease; }
+.why-fail-button span { transition: transform 250ms ease; }
+.why-fail-button:hover { background: #D5EF50; transform: translateY(-2px); }
+.why-fail-button:hover span { transform: translateX(4px); }
+@media (prefers-reduced-motion: no-preference) {
+  .why-fail-row { transition: opacity 500ms ease, transform 500ms ease; transition-delay: var(--reveal-delay, 0ms); }
+  .why-fail-row.awaiting-reveal { opacity: 0; transform: translateY(16px); }
+}
+@media (max-width: 960px) {
+  .why-fail-row { grid-template-columns: 1fr; gap: 16px; }
+  .why-fail-rows { gap: 24px; max-width: 680px; }
+  .why-fail-problem { padding-top: 0; align-items: center; }
+  .why-fail-number { margin-top: 0; }
+  .why-fail-problem::after { display: none; }
+  .why-fail-problem-text { padding-right: 0; }
+}
+@media (max-width: 600px) {
+  .why-fail { padding: 56px 18px; }
+  .why-fail-header p { font-size: 18px; }
+  .why-fail-rows { margin-top: 36px; }
+  .why-fail-problem, .why-fail-solution-heading { font-size: 20px; }
+  .why-fail-solution { padding: 20px; }
+  .why-fail-description { font-size: 17px; }
+  .why-fail-action { margin-top: 40px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .why-fail-row, .why-fail-solution, .why-fail-button, .why-fail-button span { transition: none; }
+  .why-fail-button:hover, .why-fail-button:hover span { transform: none; }
+}
