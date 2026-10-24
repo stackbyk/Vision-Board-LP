@@ -9,11 +9,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400&family=DM+Serif+Display&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=timeline-3">
   <link rel="stylesheet" href="testimonials.css">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="for-you.css">
   <link rel="stylesheet" href="why-fail.css">
+  <link rel="stylesheet" href="build-with-us.css">
 </head>
 <body>
   <div class="announcement">Small batch. Limited seats. Book your Vision Board Workshop now.</div>
@@ -72,15 +73,35 @@
       <a class="why-fail-button" href="#">Create My Vision Board <span aria-hidden="true">→</span></a>
     </div>
   </section>
+  <section class="build-with-us" aria-labelledby="build-with-us-title">
+    <h2 id="build-with-us-title">Why Build Your Vision Board With Us?</h2>
+    <div class="build-circles" role="group" aria-label="Explore four workshop benefits"></div>
+    <a class="build-cta" href="#">I Want To Create Mine <span aria-hidden="true">→</span></a>
+  </section>
+  <section class="workshop-timeline" aria-labelledby="workshop-timeline-title">
+    <h2 id="workshop-timeline-title">Inside the 2-Hour Workshop</h2>
+    <div class="workshop-timeline-groups">
+      <div class="workshop-timeline-group workshop-timeline-inside">
+        <p class="workshop-timeline-pill"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="13" rx="2"/><path d="M12 16v5m-5 0h10"/></svg>Inside the Workshop</p>
+        <ol class="workshop-timeline-list" id="workshop-timeline-inside"></ol>
+      </div>
+      <div class="workshop-timeline-group workshop-timeline-after">
+        <p class="workshop-timeline-pill"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 9-8 9 8M5 10v11h14V10m-10 11v-8h6v8"/></svg>After Your Workshop</p>
+        <ol class="workshop-timeline-list" id="workshop-timeline-after" start="5"></ol>
+      </div>
+    </div>
+  </section>
   <dialog id="booking-dialog" aria-labelledby="booking-title">
     <h2 id="booking-title">Create My Vision Board</h2>
     <p>Workshop booking details will be available here soon.</p>
     <button class="cta" type="button" id="close-dialog">Close</button>
   </dialog>
-  <script src="script.js"></script>
+  <script src="script.js?v=timeline-3"></script>
   <script src="video.js"></script>
   <script src="testimonials.js"></script>
   <script src="for-you.js"></script>
   <script src="why-fail.js"></script>
+  <script src="build-with-us.js"></script>
 </body>
 </html>
+

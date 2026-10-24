@@ -1,4 +1,5 @@
 :root {
+  --bg-lavender: #F4EEFF;
   --purple: #472C7D;
   --lavender: #E5D8FF;
   --light-purple: #CC88FF;
@@ -93,4 +94,59 @@ dialog p { margin-top: 24px; }
 @media (max-width: 400px) {
   :root { --heading-size: 38px; --body-size: 16px; }
   .hero { padding-inline: 18px; }
+}
+/* Workshop timeline: all rules are scoped to this section. */
+.workshop-timeline { --card-bg: #F4EEFF; --brand-blue: #472C7D; padding: 80px 24px; background: #FFFFFF; color: var(--purple); font-family: 'DM Sans', sans-serif; font-size: 15px; line-height: 1.55; }
+.workshop-timeline h2 { margin: 0 auto 56px; text-align: center; font-family: 'DM Serif Display', serif; font-size: clamp(30px, 5vw, 48px); font-weight: 400; letter-spacing: normal; line-height: 1.15; }
+.workshop-timeline-groups { max-width: 1440px; margin: auto; display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 2fr); gap: 32px; }
+.workshop-timeline-group { min-width: 0; display: grid; grid-template-rows: auto 1fr; }
+.workshop-timeline-after { position: relative; }
+.workshop-timeline-after::before { content: ''; position: absolute; top: 0; bottom: 0; left: -17px; border-left: 1.5px dashed var(--light-purple); }
+.workshop-timeline-pill { width: fit-content; max-width: 100%; margin: 0 auto 32px; display: flex; align-items: center; justify-content: center; gap: 12px; border-radius: 999px; padding: 16px 32px; background: var(--lavender); font-family: 'DM Serif Display', serif; font-size: clamp(20px, 2vw, 24px); white-space: nowrap; line-height: 1.4; }
+.workshop-timeline-pill svg { width: 28px; height: 28px; flex-shrink: 0; stroke: var(--purple); stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+.workshop-timeline-list { --timeline-line: var(--purple); position: relative; display: grid; grid-template-columns: repeat(4, minmax(200px, 1fr)); gap: 16px; margin: 0; padding: 0; list-style: none; }
+.workshop-timeline-after .workshop-timeline-list { --timeline-line: var(--light-purple); grid-template-columns: repeat(2, minmax(200px, 1fr)); }
+.workshop-timeline-list::before { content: ''; position: absolute; left: 0; right: 0; top: 28px; height: 2px; background: var(--timeline-line); transform-origin: left center; transition: transform 900ms ease; }
+.workshop-timeline-list::after { content: ''; position: absolute; left: 0; top: 24px; width: 10px; height: 10px; border-radius: 50%; background: var(--timeline-line); box-shadow: calc(var(--line-width, 0px) - 10px) 0 0 var(--timeline-line); }
+.workshop-timeline-step { position: relative; min-width: 0; display: flex; flex-direction: column; align-items: center; }
+.workshop-timeline-node { position: relative; z-index: 1; display: grid; place-items: center; flex: 0 0 56px; width: 56px; height: 56px; border-radius: 50%; border: 2px solid var(--light-purple); background: var(--white); color: var(--purple); font-family: 'DM Serif Display', serif; font-size: 24px; transition: background 400ms, color 400ms, box-shadow 400ms; }
+.workshop-timeline-connector { width: 1px; height: 20px; flex-shrink: 0; background: var(--light-purple); }
+.workshop-timeline-card { width: 100%; flex: 1; padding: 24px 20px; box-sizing: border-box; border: 2px solid var(--brand-blue); border-radius: 20px; background: var(--card-bg); transition: transform 400ms cubic-bezier(.2,.8,.2,1), border-color 400ms, box-shadow 400ms, opacity 500ms; }
+.workshop-timeline h3 { margin: 14px 0 10px; font-family: 'DM Serif Display', serif; font-size: clamp(18px, 1.6vw, 22px); font-weight: 400; letter-spacing: normal; line-height: 1.25; }
+.workshop-timeline-card p { font-size: 15px; line-height: 1.55; }
+.workshop-timeline-step.is-active .workshop-timeline-node, .workshop-timeline-step.is-lit .workshop-timeline-node { background: var(--purple); color: var(--lime); box-shadow: 0 0 0 6px rgb(204 136 255 / .35); }
+.workshop-timeline-step.is-active .workshop-timeline-card { transform: translateY(-6px); border-color: var(--brand-blue); box-shadow: 0 0 0 1px var(--brand-blue); }
+.workshop-timeline-card:focus-visible { outline: 3px solid var(--light-purple); outline-offset: 3px; }
+@media (prefers-reduced-motion: no-preference) {
+ .workshop-timeline:not(.is-revealed) .workshop-timeline-list::before { transform: scaleX(0); }
+ .workshop-timeline:not(.is-revealed) .workshop-timeline-card { opacity: 0; transform: translateY(16px); }
+}
+/* Stack groups early enough to preserve the requested 200px minimum card width. */
+@media (max-width: 1379px) {
+ .workshop-timeline-groups { grid-template-columns: 1fr; max-width: 900px; gap: 40px; }
+ .workshop-timeline-list { grid-template-columns: repeat(2, minmax(200px, 1fr)); row-gap: 24px; }
+ .workshop-timeline-after::before { display: none; }
+}
+@media (max-width: 639px) {
+ .workshop-timeline { padding: 56px 18px 80px; }
+ .workshop-timeline h2 { margin-bottom: 36px; }
+ .workshop-timeline-pill { width: 100%; padding: 14px 20px; font-size: 20px; }
+ .workshop-timeline-after { padding-top: 28px; border-top: 1px solid var(--lavender); }
+ .workshop-timeline-list, .workshop-timeline-after .workshop-timeline-list { display: flex; flex-direction: column; gap: 24px; }
+ .workshop-timeline-list::before { left: 27px; right: auto; top: 0; bottom: 0; width: 2px; height: auto; transform-origin: top center; background: var(--light-purple); }
+ .workshop-timeline-list::after { display: none; }
+ .workshop-timeline-step { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 16px; align-items: start; }
+ .workshop-timeline-node { margin-top: 20px; }
+ .workshop-timeline-connector { position: absolute; left: 56px; top: 48px; width: 16px; height: 1px; }
+ .workshop-timeline-card { padding: 24px 18px; }
+ .workshop-timeline:not(.is-revealed) .workshop-timeline-list::before { transform: scaleY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+ .workshop-timeline *, .workshop-timeline *::before { transition: none !important; }
+ .workshop-timeline-list::before { transform: none !important; }
+ .workshop-timeline-step.is-active .workshop-timeline-card { transform: none; }
+}
+
+@media (min-width: 640px) and (max-width: 1199px) {
+ .workshop-timeline-pill { padding: 14px 24px; font-size: 22px; }
 }
