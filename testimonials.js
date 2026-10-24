@@ -59,15 +59,15 @@ const writtenTestimonials = [
     quote:
       "“I recently attended the Vision Board workshop and it was an absolutely transformative experience. Shraddha is a wonderful host and an inspiring mentor who created a warm, safe space for everyone to dream big and get clarity on their goals. Her step-by-step guidance, practical tips and encouraging feedback made the process simple, powerful and deeply personal. Thank you, Shraddha, for pouring so much heart into the session and for helping me walk away with a clear, actionable vision for my future. Highly recommended to anyone who wants to reset, refocus and realign their life goals through a meaningful, hands-on workshop.”",
     name: "Prateek Singh",
-    role: "Workshop Participant",
-    avatar: "avatars/prateek.jpg",
+    role: "Co-founder & CEO @ Brevistay",
+    avatar: "avatars/prateek.png",
   },
   {
     quote:
       "“I did the online vision board activity with Shraddha and it was such a treat! It was thoughtful, calming, empathetic, and interactive. There was ample space given to be yourself yet accountability was also placed subtly so that focus building can happen followed by action. I liked the group, the content of the workshop, as well as the outcome. You can definitely trust your time to this program.”",
     name: "Shreya Nandy",
-    role: "Workshop Participant",
-    avatar: "avatars/shreya.jpg",
+    role: "Freelance Writer",
+    avatar: "avatars/shreya.png",
   },
 ];
 
