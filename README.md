@@ -12,14 +12,14 @@ The workshop runs in small batches, so seats sell out by word of mouth and Insta
 
 The page is built around the workshop's own numbers:
 
-| Number | Where it shows up |
-|---|---|
-| **500+** people have made their boards | Hero social proof |
-| **4.92 / 5** average rating | Hero, under the headline |
-| **2 hours** | Hero feature strip, timeline, "Create it in two hours" |
-| **8+ years** of coach experience | Coach bio |
-| **6 video + 6 written** testimonials | Testimonials section |
-| **7** FAQs | FAQ accordion |
+| Number                                 | Where it shows up                                      |
+| -------------------------------------- | ------------------------------------------------------ |
+| **500+** people have made their boards | Hero social proof                                      |
+| **4.92 / 5** average rating            | Hero, under the headline                               |
+| **2 hours**                            | Hero feature strip, timeline, "Create it in two hours" |
+| **8+ years** of coach experience       | Coach bio                                              |
+| **6 video + 6 written** testimonials   | Testimonials section                                   |
+| **7** FAQs                             | FAQ accordion                                          |
 
 ---
 
@@ -27,30 +27,30 @@ The page is built around the workshop's own numbers:
 
 Eleven sections, top to bottom. The order is deliberate: proof first, then objections, then the offer details, then the person behind it.
 
-| # | Section | What it does |
-|---|---|---|
-| 1 | Announcement bar | Urgency line: "Small batch. Limited seats." |
-| 2 | Hero | Headline, 500+ / 4.92 proof, CTA, workshop preview video slot, 5-item feature strip |
-| 3 | Testimonials | 6 video testimonials (YouTube Shorts) + 6 written reviews with photos |
-| 4 | Is this for you? | 6 checklist cards, plus one honest "this may not be for you" note |
-| 5 | Why most boards fail | 4 problem → fix rows |
-| 6 | Why build with us | 4 rotating circles, auto-cycle every 4 s |
-| 7 | Inside the 2-hour workshop | 6-step timeline (4 live + 2 after) |
-| 8 | Actual vision boards | 3 real participant boards |
-| 9 | Also included | 4 extras: playlist, affirmations, daily motivation, weekly check-ins |
-| 10 | Meet your coach | Bio, photo, 4 social links |
-| 11 | FAQ | 7 questions, one open at a time |
+| #   | Section                    | What it does                                                                        |
+| --- | -------------------------- | ----------------------------------------------------------------------------------- |
+| 1   | Announcement bar           | Urgency line: "Small batch. Limited seats."                                         |
+| 2   | Hero                       | Headline, 500+ / 4.92 proof, CTA, workshop preview video slot, 5-item feature strip |
+| 3   | Testimonials               | 6 video testimonials (YouTube Shorts) + 6 written reviews with photos               |
+| 4   | Is this for you?           | 6 checklist cards, plus one honest "this may not be for you" note                   |
+| 5   | Why most boards fail       | 4 problem → fix rows                                                                |
+| 6   | Why build with us          | 4 rotating circles, auto-cycle every 4 s                                            |
+| 7   | Inside the 2-hour workshop | 6-step timeline (4 live + 2 after)                                                  |
+| 8   | Actual vision boards       | 3 real participant boards                                                           |
+| 9   | Also included              | 4 extras: playlist, affirmations, daily motivation, weekly check-ins                |
+| 10  | Meet your coach            | Bio, photo, 4 social links                                                          |
+| 11  | FAQ                        | 7 questions, one open at a time                                                     |
 
 ### The 2 hours, minute by minute
 
-| Step | Minutes | Length | Share of session |
-|---|---|---|---|
-| 01 Pause & Reflect | 0-20 | 20 min | 17% |
-| 02 Choose Your Priorities | 20-45 | 25 min | 21% |
-| 03 Create Your Board Live | 45-100 | 55 min | 46% |
-| 04 Present Your Vision | 100-120 | 20 min | 17% |
-| 05 Hardcopy (optional) | within 7 days of the session | n/a | n/a |
-| 06 Keep Working On It | ongoing check-ins | n/a | n/a |
+| Step                      | Minutes                      | Length | Share of session |
+| ------------------------- | ---------------------------- | ------ | ---------------- |
+| 01 Pause & Reflect        | 0-20                         | 20 min | 17%              |
+| 02 Choose Your Priorities | 20-45                        | 25 min | 21%              |
+| 03 Create Your Board Live | 45-100                       | 55 min | 46%              |
+| 04 Present Your Vision    | 100-120                      | 20 min | 17%              |
+| 05 Hardcopy (optional)    | within 7 days of the session | n/a    | n/a              |
+| 06 Keep Working On It     | ongoing check-ins            | n/a    | n/a              |
 
 Nearly half the session (55 of 120 minutes) is hands-on building. That's why the page says "leave with a ready board".
 
@@ -69,14 +69,14 @@ Why no framework: it's a single page with no routing and no shared state. A fram
 
 ### Size of the codebase
 
-| | |
-|---|---|
-| Files | 30 (12 code, 10 images, 3 docs, 5 misc) |
-| Lines of code | ~1,700 (440 HTML, 313 CSS in `styles.css`, ~960 JS and section CSS) |
-| Code weight | ~96 KB total, uncompressed |
-| Images | ~5.1 MB across 10 files |
-| Runtime dependencies | **0** |
-| Build time | **0 s** |
+|                      |                                                                     |
+| -------------------- | ------------------------------------------------------------------- |
+| Files                | 30 (12 code, 10 images, 3 docs, 5 misc)                             |
+| Lines of code        | ~1,700 (440 HTML, 313 CSS in `styles.css`, ~960 JS and section CSS) |
+| Code weight          | ~96 KB total, uncompressed                                          |
+| Images               | ~5.1 MB across 10 files                                             |
+| Runtime dependencies | **0**                                                               |
+| Build time           | **0 s**                                                             |
 
 ---
 
@@ -115,17 +115,17 @@ Each section owns its own JS and CSS file, so editing one section can't accident
 
 All the copy lives in plain arrays at the top of each JS file. Change the text, save, refresh.
 
-| To change... | Edit this | In file |
-|---|---|---|
-| Hero video | `VIDEO_URL` | `video.js` |
-| Video testimonials | `videoTestimonials` | `testimonials.js` |
-| Written reviews | `writtenTestimonials` | `testimonials.js` |
-| "For you if..." cards | `forYouIf` | `for-you.js` |
-| Why-boards-fail rows | `whyFail` | `why-fail.js` |
-| Benefit circles | `buildBenefits` | `build-with-us.js` |
-| Timeline steps and minutes | `workshopTimeline` | `script.js` |
-| FAQ | `workshopFaq` | `script.js` |
-| Participant boards | `<img>` tags in "Actual boards" | `index.html` |
+| To change...               | Edit this                       | In file            |
+| -------------------------- | ------------------------------- | ------------------ |
+| Hero video                 | `VIDEO_URL`                     | `video.js`         |
+| Video testimonials         | `videoTestimonials`             | `testimonials.js`  |
+| Written reviews            | `writtenTestimonials`           | `testimonials.js`  |
+| "For you if..." cards      | `forYouIf`                      | `for-you.js`       |
+| Why-boards-fail rows       | `whyFail`                       | `why-fail.js`      |
+| Benefit circles            | `buildBenefits`                 | `build-with-us.js` |
+| Timeline steps and minutes | `workshopTimeline`              | `script.js`        |
+| FAQ                        | `workshopFaq`                   | `script.js`        |
+| Participant boards         | `<img>` tags in "Actual boards" | `index.html`       |
 
 ### Adding a testimonial
 
@@ -149,15 +149,15 @@ Paste a YouTube watch/share/embed URL or a direct `.mp4` link into `VIDEO_URL` i
 
 ## Design system
 
-| Token | Hex | Used for |
-|---|---|---|
-| `--purple` | `#472C7D` | Hero background, headings |
-| `--lavender` | `#E5D8FF` | Announcement bar, badges |
-| `--light-purple` | `#CC88FF` | Accents |
-| `--lime` | `#E1FB62` | Primary CTA button |
-| `--yellow` | `#FFBC59` | Rating stars |
-| `--pink` | `#CD0067` | LIVE badge |
-| `--white` | `#FFFFFF` | Text on purple, section backgrounds |
+| Token            | Hex       | Used for                            |
+| ---------------- | --------- | ----------------------------------- |
+| `--purple`       | `#472C7D` | Hero background, headings           |
+| `--lavender`     | `#E5D8FF` | Announcement bar, badges            |
+| `--light-purple` | `#CC88FF` | Accents                             |
+| `--lime`         | `#E1FB62` | Primary CTA button                  |
+| `--yellow`       | `#FFBC59` | Rating stars                        |
+| `--pink`         | `#CD0067` | LIVE badge                          |
+| `--white`        | `#FFFFFF` | Text on purple, section backgrounds |
 
 Type is controlled by just two variables, `--heading-size` and `--body-size`, which rescale at every breakpoint. Change them once and the whole page follows.
 
@@ -180,7 +180,7 @@ The page adapts at **13 distinct breakpoints** across `styles.css` and `testimon
 
 ## Payments (Razorpay)
 
-> **Status: not yet connected.** The hero button currently opens a placeholder dialog ("Workshop booking details will be available here soon"). The two other CTAs (*Create My Vision Board* in "Why most boards fail" and *I Want To Create Mine*) are still `href="#"`.
+> **Status: not yet connected.** The hero button currently opens a placeholder dialog ("Workshop booking details will be available here soon"). The two other CTAs (_Create My Vision Board_ in "Why most boards fail" and _I Want To Create Mine_) are still `href="#"`.
 
 Planned flow, all on the same page with no redirect:
 
@@ -207,15 +207,15 @@ All three CTAs should open the same modal, so there's one booking flow and one p
 
 Real items from the current code, in rough priority order:
 
-| Priority | Item | Why it matters |
-|---|---|---|
-| High | Connect Razorpay to all 3 CTAs | Right now none of them can take a booking |
-| High | Compress images | `shreya.png` (1.9 MB), `VB3.png` (1.1 MB) and `VB2.png` (1.0 MB) make up **~78%** of the 5.1 MB image weight. Converting to WebP at proper display sizes should cut total image weight by well over half. Measure before and after with Lighthouse |
-| Medium | Add the hero preview video | The slot currently shows a "coming soon" placeholder |
-| Medium | Lazy-load below-the-fold images | Add `loading="lazy"` to boards and avatars |
-| Medium | Add Open Graph tags | Link previews on WhatsApp and Instagram currently have no custom image |
-| Low | Two Google Fonts `<link>` tags | `index.html` requests DM Sans twice (400 and 500/600); merge into one request |
-| Low | Add analytics | See below |
+| Priority | Item                            | Why it matters                                                                                                                                                                                                                                     |
+| -------- | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| High     | Connect Razorpay to all 3 CTAs  | Right now none of them can take a booking                                                                                                                                                                                                          |
+| High     | Compress images                 | `shreya.png` (1.9 MB), `VB3.png` (1.1 MB) and `VB2.png` (1.0 MB) make up **~78%** of the 5.1 MB image weight. Converting to WebP at proper display sizes should cut total image weight by well over half. Measure before and after with Lighthouse |
+| Medium   | Add the hero preview video      | The slot currently shows a "coming soon" placeholder                                                                                                                                                                                               |
+| Medium   | Lazy-load below-the-fold images | Add `loading="lazy"` to boards and avatars                                                                                                                                                                                                         |
+| Medium   | Add Open Graph tags             | Link previews on WhatsApp and Instagram currently have no custom image                                                                                                                                                                             |
+| Low      | Two Google Fonts `<link>` tags  | `index.html` requests DM Sans twice (400 and 500/600); merge into one request                                                                                                                                                                      |
+| Low      | Add analytics                   | See below                                                                                                                                                                                                                                          |
 
 ---
 
@@ -223,13 +223,13 @@ Real items from the current code, in rough priority order:
 
 No analytics are installed yet, so there are no conversion numbers to report. Any "+20% bookings" claim would be made up. Once tracking is live, record these in a table like the one below.
 
-| Metric | Baseline | Target | Actual |
-|---|---|---|---|
-| Visitors → CTA click | not tracked | set after 2 weeks of data | |
-| CTA click → payment started | not tracked | | |
-| Payment started → paid | not tracked | | |
-| Page load (mobile, Lighthouse) | not measured | | |
-| Seats filled per batch | | | |
+| Metric                         | Baseline     | Target                    | Actual |
+| ------------------------------ | ------------ | ------------------------- | ------ |
+| Visitors → CTA click           | not tracked  | set after 2 weeks of data |        |
+| CTA click → payment started    | not tracked  |                           |        |
+| Payment started → paid         | not tracked  |                           |        |
+| Page load (mobile, Lighthouse) | not measured |                           |        |
+| Seats filled per batch         |              |                           |        |
 
 A free setup that covers this is Google Analytics 4 or Plausible, with three events: `cta_click`, `checkout_opened`, `payment_success`.
 

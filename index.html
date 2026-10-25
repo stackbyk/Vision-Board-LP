@@ -427,10 +427,37 @@
     </section>
     <dialog id="booking-dialog" aria-labelledby="booking-title">
       <h2 id="booking-title">Create My Vision Board</h2>
-      <p>Workshop booking details will be available here soon.</p>
+      <p>Enter your details to reserve your seat.</p>
+      <form id="booking-form" novalidate>
+        <input
+          id="vb-name"
+          type="text"
+          placeholder="Full name"
+          autocomplete="name"
+          required
+        />
+        <input
+          id="vb-email"
+          type="email"
+          placeholder="Email"
+          autocomplete="email"
+          required
+        />
+        <input
+          id="vb-phone"
+          type="tel"
+          placeholder="Phone (10 digits)"
+          autocomplete="tel"
+          required
+        />
+        <button class="cta" type="submit" id="vb-pay">Proceed to Pay</button>
+        <p id="vb-msg" role="status"></p>
+      </form>
       <button class="cta" type="button" id="close-dialog">Close</button>
     </dialog>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script src="script.js?v=faq-1"></script>
+    <script src="payment.js"></script>
     <script src="video.js"></script>
     <script src="testimonials.js"></script>
     <script src="for-you.js"></script>

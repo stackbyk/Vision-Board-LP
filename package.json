@@ -1,0 +1,8 @@
+{
+  "name": "vision-board-lp",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "razorpay": "^2.9.8"
+  }
+}

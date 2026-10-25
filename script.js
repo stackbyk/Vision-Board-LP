@@ -1,7 +1,12 @@
 const bookingDialog = document.querySelector("#booking-dialog");
 document
-  .querySelector(".hero-copy .cta")
-  .addEventListener("click", () => bookingDialog.showModal());
+  .querySelectorAll(".hero-copy .cta, .why-fail-button, .build-cta")
+  .forEach((btn) =>
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      bookingDialog.showModal();
+    }),
+  );
 document
   .querySelector("#close-dialog")
   .addEventListener("click", () => bookingDialog.close());
