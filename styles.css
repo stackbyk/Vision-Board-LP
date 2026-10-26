@@ -193,6 +193,28 @@ h1 span {
   width: 100%;
   transform: translateY(0);
 }
+.video-wrap:has(> .hero-image) {
+  align-self: center;
+}
+.hero-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 640px;
+  margin-inline: auto;
+  object-fit: contain;
+}
+.video-preview[hidden] {
+  display: none;
+}
+@media (max-width: 899px) {
+  .hero-layout:has(.hero-image) {
+    row-gap: 24px;
+  }
+  .hero-image {
+    max-width: 480px;
+  }
+}
 .video-preview {
   position: relative;
   display: block;
@@ -1120,7 +1142,7 @@ dialog::backdrop {
 }
 /* Accessible FAQ accordion. */
 .workshop-faq {
-  padding: 80px 24px;
+  padding: 80px 24px 64px;
   background: #ffffff;
   color: var(--purple);
 }
@@ -1256,7 +1278,7 @@ dialog::backdrop {
 }
 @media (max-width: 1023px) {
   .workshop-faq {
-    padding: 56px 20px;
+    padding: 56px 20px 64px;
   }
   .faq-question {
     padding: 20px;
@@ -1326,160 +1348,93 @@ dialog::backdrop {
   overflow-wrap: anywhere;
 }
 
-/* Site footer */
-.site-footer {
-  padding: 48px 24px 56px;
-  background: var(--purple);
-  color: var(--white);
-  font-family: "DM Sans", sans-serif;
+/* Booking modal international phone selector. */
+#booking-form,
+#booking-dialog .iti {
+  overflow: visible;
+}
+#booking-dialog .iti {
+  display: block;
+  width: 100%;
   font-size: 14px;
+  color: #1a1a1a;
+  --iti-dropdown-bg: #ffffff;
+  --iti-border-color: #ccc;
 }
-.site-footer-inner {
-  display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1.6fr);
-  align-items: start;
-  gap: 48px;
-  max-width: 1000px;
-  margin: 0 auto;
+#booking-form #vb-phone {
+  background: #ffffff;
+  color: #1a1a1a;
 }
-.site-footer a {
-  color: inherit;
-  text-decoration: none;
+#booking-dialog .iti__selected-country {
+  background: transparent;
+  color: #1a1a1a;
+  font-size: 14px;
+  border-radius: 8px 0 0 8px;
 }
-.site-footer a:focus-visible {
-  outline: 2px solid #b57bee;
-  outline-offset: 4px;
+#booking-dialog .iti__dropdown-content {
+  width: 100%;
+  min-width: 300px;
+  max-width: none;
+  z-index: 10;
+  background: #ffffff;
+  color: #1a1a1a;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
 }
-.site-footer-logo {
-  display: block;
-  width: 90px;
+#booking-dialog .iti__country-list {
+  max-height: 260px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  color: #1f1b3a;
 }
-.site-footer-logo img {
-  display: block;
-  width: 90px;
-  height: 90px;
-  object-fit: contain;
+#booking-form .iti__search-input {
+  width: 100%;
+  height: 40px;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: none;
+  font-size: 15px;
+  color: #1f1b3a;
+  background: #ffffff;
 }
-.site-footer ul {
-  padding: 0;
-  margin: 0;
-  list-style: none;
-}
-.site-footer .site-footer-socials {
+#booking-dialog .iti__country {
   display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 36px;
-}
-.site-footer-socials a {
-  display: grid;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.14);
-  transition: background 200ms ease;
-}
-.site-footer-socials a:hover {
-  background: rgba(255, 255, 255, 0.28);
-}
-.site-footer-socials svg {
-  width: 16px;
-  height: 16px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.75;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-.site-footer-links h2 {
-  font-family: "DM Serif Display", serif;
-  font-size: 16px;
-  font-weight: 400;
+  align-items: center;
+  padding: 10px 14px;
+  font-size: 15px;
   line-height: 1.3;
-  letter-spacing: normal;
-  color: var(--white);
+  color: #1f1b3a;
+  white-space: nowrap;
 }
-.site-footer-links h2::after {
-  content: "";
-  display: block;
-  width: 28px;
-  height: 1px;
-  margin-top: 10px;
-  background: rgba(255, 255, 255, 0.6);
+#booking-dialog .iti__country-name {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
-.site-footer-links nav {
-  margin-top: 20px;
+#booking-dialog .iti__country .iti__flag,
+#booking-dialog .iti__country .iti__dial-code {
+  flex-shrink: 0;
 }
-.site-footer-links li + li {
-  margin-top: 10px;
+#booking-dialog .iti__country:hover,
+#booking-dialog .iti__country.iti__highlight {
+  background: #f1eaff;
 }
-.site-footer-links a:hover {
-  text-decoration: underline;
-}
-.site-footer-quote {
-  position: relative;
-  isolation: isolate;
-}
-.footer-quote {
-  position: relative;
-  margin: 0;
-  padding-top: 28px;
-  max-width: 400px;
-}
-.footer-quote-mark {
-  position: absolute;
-  top: -6px;
-  left: -4px;
-  z-index: 0;
-  font-family: "DM Serif Display", serif;
-  font-size: 190px;
-  line-height: 1;
-  color: rgba(255, 255, 255, 0.12);
-  pointer-events: none;
-  user-select: none;
-}
-.footer-quote p {
-  position: relative;
-  z-index: 1;
-  max-width: 380px;
-  margin: 0;
-  font-family: "DM Serif Display", serif;
-  font-size: clamp(20px, 2.2vw, 26px);
-  font-weight: 400;
-  line-height: 1.45;
-  letter-spacing: 0;
-  color: #e9dcff;
-  text-align: left;
-}
-@media (max-width: 899px) {
-  .site-footer-inner {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+@media (max-width: 479px) {
+  #booking-dialog .iti__dropdown-content {
+    min-width: 0;
   }
-  .site-footer-quote {
-    grid-column: 1 / -1;
+  #booking-dialog .iti__country,
+  #booking-form .iti__search-input {
+    font-size: 14px;
   }
 }
-@media (max-width: 599px) {
-  .site-footer-inner {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 32px;
-    text-align: center;
-  }
-  .site-footer-logo,
-  .site-footer-links h2::after {
-    margin-inline: auto;
-  }
-  .site-footer .site-footer-socials {
-    justify-content: center;
-  }
-  .footer-quote {
-    max-width: 100%;
-  }
-  .footer-quote-mark {
-    font-size: 130px;
-  }
-  .footer-quote p {
-    font-size: 20px;
-  }
+#booking-dialog .iti__selected-country:focus-visible,
+#booking-dialog .iti input:focus-visible {
+  outline: 2px solid var(--light-purple);
+  outline-offset: 2px;
 }

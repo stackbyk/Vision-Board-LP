@@ -177,78 +177,66 @@ const writtenTestimonials = [
   dots.className = "video-pagination";
   dots.setAttribute("aria-label", "Video pages");
   stage.parentElement.append(dots);
-  function pagePositions() {
-    const count = Math.max(
-      1,
-      parseInt(
-        getComputedStyle(stage.parentElement).getPropertyValue(
-          "--visible-videos",
-        ),
-      ) || 1,
-    );
-    const gap = parseFloat(getComputedStyle(stage).columnGap) || 0;
-    const step =
-      (stage.firstElementChild?.getBoundingClientRect().width || 0) + gap;
+  const cards = [...stage.querySelectorAll(".testimonial-video")];
+  let activeIndex = 0;
+  function cardPositions() {
+    const compact = matchMedia("(max-width: 899px)").matches;
+    const edge = parseFloat(getComputedStyle(stage).paddingLeft) || 0;
+    const stageBounds = stage.getBoundingClientRect();
     const maximum = Math.max(0, stage.scrollWidth - stage.clientWidth);
-    const positions = [0];
-    for (let i = count; i < videoTestimonials.length; i += count) {
-      const position = Math.min(i * step, maximum);
-      if (position > positions[positions.length - 1] + 2)
-        positions.push(position);
-    }
-    return positions;
+    const positions = cards.map((card) => {
+      // offsetWidth is unscaled; dimming transforms must not alter snap targets.
+      const left = card.offsetLeft - stage.offsetLeft;
+      return Math.max(0, Math.min(maximum, compact
+        ? left + card.offsetWidth / 2 - stage.clientWidth / 2
+        : left - edge));
+    });
+    return compact ? positions : positions.filter((position, index) => index === 0 || position > positions[index - 1] + 2);
   }
-  function currentPage(positions) {
-    return positions.reduce(
-      (best, position, index) =>
-        Math.abs(position - stage.scrollLeft) <
-        Math.abs(positions[best] - stage.scrollLeft)
-          ? index
-          : best,
-      0,
-    );
+  function currentCard(positions) {
+    return positions.reduce((best, position, index) => Math.abs(position - stage.scrollLeft) < Math.abs(positions[best] - stage.scrollLeft) ? index : best, 0);
   }
   function goTo(position) {
     if (stopCurrentVideo) stopCurrentVideo();
     stage.scrollTo({
       left: position,
       behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
-        ? "instant"
+        ? "auto"
         : "smooth",
     });
   }
   function updateNavigation() {
-    stage.parentElement.style.setProperty(
-      "--video-center",
-      `${8 + (stage.querySelector(".testimonial-media")?.getBoundingClientRect().height || 0) / 2}px`,
-    );
-    const positions = pagePositions();
+    stage.parentElement.style.setProperty("--video-center", `${12 + (stage.querySelector(".testimonial-media")?.offsetHeight || 0) / 2}px`);
+    const positions = cardPositions();
+    activeIndex = currentCard(positions);
     previous.disabled = next.disabled = positions.length < 2;
+    cards.forEach((card, index) => card.classList.toggle("is-active", index === activeIndex));
     if (dots.children.length !== positions.length) {
-      dots.replaceChildren(
-        ...positions.map((_, index) => {
-          const button = document.createElement("button");
-          button.type = "button";
-          button.setAttribute("aria-label", `Go to video page ${index + 1}`);
-          button.addEventListener("click", () =>
-            goTo(pagePositions()[index] || 0),
-          );
-          return button;
-        }),
-      );
+      dots.replaceChildren(...positions.map((_, index) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.setAttribute("aria-label", `Go to video ${index + 1}`);
+        button.addEventListener("click", () => goTo(cardPositions()[index] || 0));
+        return button;
+      }));
     }
-    [...dots.children].forEach((button, index) =>
-      button.setAttribute(
-        "aria-current",
-        String(index === currentPage(positions)),
-      ),
-    );
+    [...dots.children].forEach((button, index) => button.setAttribute("aria-current", String(index === activeIndex)));
+  }
+  function resizeCarousel() {
+    const compact = matchMedia("(max-width: 899px)").matches;
+    const gap = parseFloat(getComputedStyle(stage).columnGap) || 0;
+    const count = parseInt(getComputedStyle(stage.parentElement).getPropertyValue("--visible-videos")) || 4;
+    const width = compact ? Math.min(320, Math.max(220, stage.clientWidth * .78))
+      : (stage.parentElement.clientWidth - 96 - (count - 1) * gap) / count;
+    stage.style.setProperty("--testimonial-card-width", `${width}px`);
+    stage.style.setProperty("--testimonial-edge", `${compact ? (stage.clientWidth - width) / 2 : 50}px`);
+    updateNavigation();
   }
   function navigate(direction) {
-    const positions = pagePositions();
+    const positions = cardPositions();
     goTo(
       positions[
-        (currentPage(positions) + direction + positions.length) %
+        (currentCard(positions) + direction + positions.length) %
           positions.length
       ],
     );
@@ -256,14 +244,15 @@ const writtenTestimonials = [
   previous.addEventListener("click", () => navigate(-1));
   next.addEventListener("click", () => navigate(1));
   stage.addEventListener("scroll", updateNavigation, { passive: true });
+  stage.addEventListener("scrollend", updateNavigation);
   stage.addEventListener("keydown", (event) => {
     if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
       event.preventDefault();
       navigate(event.key === "ArrowRight" ? 1 : -1);
     }
   });
-  new ResizeObserver(updateNavigation).observe(stage);
-  updateNavigation();
+  new ResizeObserver(resizeCarousel).observe(stage);
+  resizeCarousel();
   const reviews = document.querySelector("#testimonial-reviews");
   writtenTestimonials.forEach((item) => {
     const card = document.createElement("article");

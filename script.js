@@ -36,7 +36,7 @@ document.querySelector(".rating-value").textContent = rating;
 
 const bookingDialog = document.querySelector("#booking-dialog");
 document
-  .querySelectorAll(".hero-copy .cta, .why-fail-button, .build-cta")
+  .querySelectorAll(".hero-copy .cta")
   .forEach((btn) =>
     btn.addEventListener("click", (e) => {
       e.preventDefault();

@@ -24,7 +24,7 @@ function getVideoConfig(value) {
 function renderWorkshopVideo(value) {
   const config = getVideoConfig(value);
   const preview = document.querySelector('#workshop-preview');
-  if (!config) return;
+  if (!preview || preview.hidden || !config) return;
   const player = document.createElement(config.type === 'youtube' ? 'iframe' : 'video');
   if (config.type === 'youtube') {
     player.title = 'Workshop Preview';
