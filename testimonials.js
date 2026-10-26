@@ -52,7 +52,7 @@ const writtenTestimonials = [
     quote:
       "“Attending Shraddha's vision board workshop was a truly great experience. It helped me visualize my dreams with such clarity that I could literally see my next 1 year unfolding in front of me. The session was not just about creating a board but it was about aligning my thoughts, energy, and actions toward my goals. Grateful for this experience! Highly recommended ❤️”",
     name: "Keshav Deora",
-    role: "Workshop Participant",
+    role: "CFO @ Matiks",
     avatar: "avatars/keshav.png",
   },
   {

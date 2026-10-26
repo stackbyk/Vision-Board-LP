@@ -157,9 +157,14 @@ h1 span {
   line-height: 1.5;
 }
 .stars {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   color: var(--yellow);
-  letter-spacing: 2px;
-  white-space: nowrap;
+}
+.stars svg {
+  display: block;
+  flex: none;
 }
 .cta {
   display: inline-flex;
@@ -266,19 +271,64 @@ h1 span {
 .features li:nth-child(3) svg {
   stroke-width: 1;
 }
-dialog {
-  max-width: min(90vw, 800px);
-  padding: 36px;
+#booking-dialog {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  width: 100%;
+  max-width: 380px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 24px;
   border: 1px solid var(--lavender);
-  border-radius: 24px;
+  border-radius: 16px;
   background: var(--purple);
   color: var(--white);
 }
 dialog::backdrop {
   background: rgb(0 0 0 / 65%);
 }
-dialog p {
-  margin-top: 24px;
+#booking-title {
+  padding-right: 28px;
+  margin-bottom: 8px;
+  font-size: clamp(20px, 5vw, 26px);
+  line-height: 1.2;
+}
+#booking-dialog > p {
+  margin: 0 0 14px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+#close-dialog {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--white);
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 200ms ease;
+}
+#close-dialog:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+#close-dialog:focus-visible {
+  outline: 2px solid var(--lavender);
+  outline-offset: 2px;
+}
+@media (max-width: 479px) {
+  #booking-dialog {
+    width: calc(100% - 32px);
+    padding: 20px;
+  }
 }
 @media (max-width: 1450px) {
   :root {
@@ -376,9 +426,6 @@ dialog p {
   .features li:last-child {
     grid-column: 1 / -1;
   }
-  dialog {
-    padding: 24px;
-  }
 }
 @media (max-width: 400px) {
   :root {
@@ -389,18 +436,16 @@ dialog p {
     padding-inline: 18px;
   }
 }
-/* Workshop timeline: all rules are scoped to this section. */
+/* Workshop step cards: scoped to this section. */
 .workshop-timeline {
-  --card-bg: #f4eeff;
-  --brand-blue: #472c7d;
-  padding: 80px 24px;
-  background: #ffffff;
+  --workshop-bg: var(--purple);
+  padding: 72px 24px;
+  background: var(--workshop-bg);
   color: var(--purple);
   font-family: "DM Sans", sans-serif;
-  font-size: 15px;
-  line-height: 1.55;
 }
 .workshop-timeline h2 {
+  color: var(--white);
   margin: 0 auto 56px;
   text-align: center;
   font-family: "DM Serif Display", serif;
@@ -409,263 +454,84 @@ dialog p {
   letter-spacing: normal;
   line-height: 1.15;
 }
-.workshop-timeline-groups {
-  max-width: 1440px;
-  margin: auto;
+.workshop-step-grid {
   display: grid;
-  grid-template-columns: minmax(0, 4fr) minmax(0, 2fr);
-  gap: 32px;
-}
-.workshop-timeline-group {
-  min-width: 0;
-  display: grid;
-  grid-template-rows: auto 1fr;
-}
-.workshop-timeline-after {
-  position: relative;
-}
-.workshop-timeline-after::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: -17px;
-  border-left: 1.5px dashed var(--light-purple);
-}
-.workshop-timeline-pill {
-  width: fit-content;
-  max-width: 100%;
-  margin: 0 auto 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  border-radius: 999px;
-  padding: 16px 32px;
-  background: var(--lavender);
-  font-family: "DM Serif Display", serif;
-  font-size: clamp(20px, 2vw, 24px);
-  white-space: nowrap;
-  line-height: 1.4;
-}
-.workshop-timeline-pill svg {
-  width: 28px;
-  height: 28px;
-  flex-shrink: 0;
-  stroke: var(--purple);
-  stroke-width: 1.75;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  fill: none;
-}
-.workshop-timeline-list {
-  --timeline-line: var(--purple);
-  position: relative;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(200px, 1fr));
-  gap: 16px;
-  margin: 0;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+  gap: 36px 40px;
+  max-width: 1100px;
+  margin: 0 auto;
   padding: 0;
   list-style: none;
 }
-.workshop-timeline-after .workshop-timeline-list {
-  --timeline-line: var(--light-purple);
-  grid-template-columns: repeat(2, minmax(200px, 1fr));
-}
-.workshop-timeline-list::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 28px;
-  height: 2px;
-  background: var(--timeline-line);
-  transform-origin: left center;
-  transition: transform 900ms ease;
-}
-.workshop-timeline-list::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 24px;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--timeline-line);
-  box-shadow: calc(var(--line-width, 0px) - 10px) 0 0 var(--timeline-line);
-}
-.workshop-timeline-step {
+.workshop-step-card {
   position: relative;
   min-width: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-.workshop-timeline-node {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  place-items: center;
-  flex: 0 0 56px;
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  border: 2px solid var(--light-purple);
+  padding: 44px 22px 22px;
   background: var(--white);
-  color: var(--purple);
+  border: 3px solid #6a4ba8;
+  border-radius: 24px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+}
+.workshop-step-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 6px 14px;
+  border-radius: 20px 0 14px 0;
+  /* Darker medium purple keeps white labels above AA contrast. */
+  background: #8851b7;
+  color: var(--white);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+.workshop-step-card h3 {
+  margin: 0 0 12px;
   font-family: "DM Serif Display", serif;
-  font-size: 24px;
-  transition:
-    background 400ms,
-    color 400ms,
-    box-shadow 400ms;
-}
-.workshop-timeline-connector {
-  width: 1px;
-  height: 20px;
-  flex-shrink: 0;
-  background: var(--light-purple);
-}
-.workshop-timeline-card {
-  width: 100%;
-  flex: 1;
-  padding: 24px 20px;
-  box-sizing: border-box;
-  border: 2px solid var(--brand-blue);
-  border-radius: 20px;
-  background: var(--card-bg);
-  transition:
-    transform 400ms cubic-bezier(0.2, 0.8, 0.2, 1),
-    border-color 400ms,
-    box-shadow 400ms,
-    opacity 500ms;
-}
-.workshop-timeline h3 {
-  margin: 14px 0 10px;
-  font-family: "DM Serif Display", serif;
-  font-size: clamp(18px, 1.6vw, 22px);
-  font-weight: 400;
-  letter-spacing: normal;
+  font-size: 20px;
+  font-weight: 700;
   line-height: 1.25;
+  letter-spacing: normal;
+  color: #1f1b3a;
 }
-.workshop-timeline-card p {
-  font-size: 15px;
-  line-height: 1.55;
+.workshop-after-tag {
+  display: inline-block;
+  margin: 0 0 12px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: var(--lavender);
+  color: var(--purple);
+  font-size: 11px;
+  line-height: 1.3;
+  text-transform: uppercase;
 }
-.workshop-timeline-step.is-active .workshop-timeline-node,
-.workshop-timeline-step.is-lit .workshop-timeline-node {
-  background: var(--purple);
-  color: var(--lime);
-  box-shadow: 0 0 0 6px rgb(204 136 255 / 0.35);
+.workshop-step-card img {
+  display: block;
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  border: 1px solid #d9c9fa;
+  border-radius: 14px;
 }
-.workshop-timeline-step.is-active .workshop-timeline-card {
-  transform: translateY(-6px);
-  border-color: var(--brand-blue);
-  box-shadow: 0 0 0 1px var(--brand-blue);
+.workshop-step-card p {
+  margin: 14px 0 0;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #3a3550;
 }
-.workshop-timeline-card:focus-visible {
-  outline: 3px solid var(--light-purple);
-  outline-offset: 3px;
-}
-@media (prefers-reduced-motion: no-preference) {
-  .workshop-timeline:not(.is-revealed) .workshop-timeline-list::before {
-    transform: scaleX(0);
-  }
-  .workshop-timeline:not(.is-revealed) .workshop-timeline-card {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-}
-/* Stack groups early enough to preserve the requested 200px minimum card width. */
-@media (max-width: 1379px) {
-  .workshop-timeline-groups {
-    grid-template-columns: 1fr;
-    max-width: 900px;
-    gap: 40px;
-  }
-  .workshop-timeline-list {
-    grid-template-columns: repeat(2, minmax(200px, 1fr));
-    row-gap: 24px;
-  }
-  .workshop-timeline-after::before {
-    display: none;
+@media (max-width: 1023px) {
+  .workshop-step-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 @media (max-width: 639px) {
   .workshop-timeline {
-    padding: 56px 18px 80px;
+    padding: 64px 20px;
   }
-  .workshop-timeline h2 {
-    margin-bottom: 36px;
-  }
-  .workshop-timeline-pill {
-    width: 100%;
-    padding: 14px 20px;
-    font-size: 20px;
-  }
-  .workshop-timeline-after {
-    padding-top: 28px;
-    border-top: 1px solid var(--lavender);
-  }
-  .workshop-timeline-list,
-  .workshop-timeline-after .workshop-timeline-list {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-  }
-  .workshop-timeline-list::before {
-    left: 27px;
-    right: auto;
-    top: 0;
-    bottom: 0;
-    width: 2px;
-    height: auto;
-    transform-origin: top center;
-    background: var(--light-purple);
-  }
-  .workshop-timeline-list::after {
-    display: none;
-  }
-  .workshop-timeline-step {
-    display: grid;
-    grid-template-columns: 56px minmax(0, 1fr);
-    gap: 16px;
-    align-items: start;
-  }
-  .workshop-timeline-node {
-    margin-top: 20px;
-  }
-  .workshop-timeline-connector {
-    position: absolute;
-    left: 56px;
-    top: 48px;
-    width: 16px;
-    height: 1px;
-  }
-  .workshop-timeline-card {
-    padding: 24px 18px;
-  }
-  .workshop-timeline:not(.is-revealed) .workshop-timeline-list::before {
-    transform: scaleY(0);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .workshop-timeline *,
-  .workshop-timeline *::before {
-    transition: none !important;
-  }
-  .workshop-timeline-list::before {
-    transform: none !important;
-  }
-  .workshop-timeline-step.is-active .workshop-timeline-card {
-    transform: none;
-  }
-}
-
-@media (min-width: 640px) and (max-width: 1199px) {
-  .workshop-timeline-pill {
-    padding: 14px 24px;
-    font-size: 22px;
+  .workshop-step-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 /* Actual vision boards and workshop extras. */
@@ -700,13 +566,13 @@ dialog p {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 28px;
-  align-items: start;
+  align-items: stretch;
 }
 .board-slot {
   position: relative;
   width: 100%;
   min-width: 0;
-  aspect-ratio: 10 / 7;
+  aspect-ratio: 3 / 2;
   margin: 0;
   padding: 8px;
   border: 4px solid var(--lavender);
@@ -720,15 +586,13 @@ dialog p {
     border-color 400ms ease,
     opacity 500ms ease;
 }
-.board-slot:has(img) {
-  aspect-ratio: auto;
-}
 .board-slot img {
   width: 100%;
-  height: auto;
+  height: 100%;
   display: block;
   border-radius: 16px;
-  object-fit: contain;
+  object-fit: cover;
+  object-position: center;
   background: #ffffff;
 }
 .board-slot:hover,
@@ -774,6 +638,21 @@ dialog p {
   transition:
     transform 400ms cubic-bezier(0.2, 0.8, 0.2, 1),
     box-shadow 400ms ease;
+}
+.workshop-extras-grid li:nth-child(odd) {
+  background: var(--purple);
+  border-color: var(--purple);
+  box-shadow: 0 8px 20px rgba(71, 44, 125, 0.25);
+}
+.workshop-extras-grid li:nth-child(odd) h4 {
+  color: var(--white);
+}
+.workshop-extras-grid li:nth-child(odd) p {
+  color: rgba(255, 255, 255, 0.9);
+}
+.workshop-extras-grid li:nth-child(odd):hover,
+.workshop-extras-grid li:nth-child(odd):focus-visible {
+  box-shadow: 0 0 0 1px var(--purple), 0 8px 20px rgba(71, 44, 125, 0.25);
 }
 .workshop-extras-grid h4 {
   margin: 0 0 12px;
@@ -993,15 +872,15 @@ dialog p {
   display: grid;
   grid-template-columns: minmax(0, 420px) minmax(0, 1fr);
   gap: 56px;
-  align-items: center;
+  align-items: start;
 }
 .coach-photo {
   position: relative;
-  width: 100%;
-  max-width: 460px;
+  width: fit-content;
+  max-width: min(460px, 100%);
   min-height: 420px;
   margin: 0 auto;
-  align-self: end;
+  align-self: center;
   border: none;
   border-radius: 0;
   overflow: visible;
@@ -1063,9 +942,21 @@ dialog p {
 .coach-follow {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 16px;
-  margin-top: 32px;
+  justify-content: center;
+  flex-wrap: nowrap;
+  gap: 14px;
+  margin: 20px auto 0;
+  width: fit-content;
+  max-width: 100%;
+}
+@media (max-width: 399px) {
+  .coach-follow {
+    flex-wrap: wrap;
+  }
+  .coach-follow-label {
+    flex-basis: 100%;
+    text-align: center;
+  }
 }
 .coach-follow-label {
   font-family: "DM Serif Display", serif;
@@ -1075,7 +966,7 @@ dialog p {
 }
 .coach-follow ul {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 12px;
   margin: 0;
   padding: 0;
@@ -1136,7 +1027,7 @@ dialog p {
     gap: 40px;
   }
   .coach-photo {
-    max-width: 340px;
+    max-width: min(340px, 100%);
   }
   .coach-card {
     margin-inline: auto;
@@ -1176,50 +1067,36 @@ dialog p {
 
 /* Coach photo caption, kept outside the empty image slot. */
 .coach-profile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   min-width: 0;
   width: 100%;
-  align-self: end;
+  align-self: start;
 }
 .coach-name-tag {
+  position: static;
   display: block;
   width: fit-content;
   max-width: 100%;
-  margin: 0;
-  padding: 20px 28px;
+  margin: 16px auto 0;
+  padding: 16px 28px;
   border-radius: 20px;
   background: #e5d8ff;
   border: none;
   box-shadow: none;
   color: #472c7d;
-  text-align: left;
-}
-.coach-name-eyebrow {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-family: "DM Sans", sans-serif;
-  font-size: clamp(16px, 1.5vw, 20px);
-  font-weight: 400;
-  line-height: 1.5;
-}
-.coach-name-eyebrow svg {
-  flex: 0 0 24px;
-  width: 24px;
-  height: 24px;
-  fill: #cd0067;
-}
-.coach-name-eyebrow span {
-  opacity: 0.85;
+  text-align: center;
 }
 .coach-name {
-  margin-top: 8px;
+  margin-top: 0;
   font-family: "DM Serif Display", serif;
-  font-size: clamp(28px, 3vw, 36px);
+  font-size: clamp(22px, 2.4vw, 26px);
   font-weight: 400;
   line-height: 1.15;
 }
 .coach-role {
-  margin-top: 8px;
+  margin-top: 4px;
   font-family: "DM Sans", sans-serif;
   font-size: clamp(16px, 1.5vw, 20px);
   font-weight: 400;
@@ -1228,6 +1105,7 @@ dialog p {
 }
 
 .coach-name-tag > p {
+  text-align: center;
   white-space: nowrap;
 }
 @media (max-width: 1023px) {
@@ -1399,14 +1277,9 @@ dialog p {
   }
 }
 
-@media (min-width: 640px) and (max-width: 1099px) {
+@media (max-width: 767px) {
   .actual-boards-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .actual-boards-grid .board-slot:last-child {
-    grid-column: 1 / -1;
-    width: calc((100% - 28px) / 2);
-    justify-self: center;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 @media (max-width: 639px) {
@@ -1417,16 +1290,196 @@ dialog p {
 
 #booking-form {
   display: grid;
-  gap: 12px;
-  margin: 16px 0;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  margin: 0;
 }
 #booking-form input {
-  padding: 12px 14px;
+  width: 100%;
+  min-width: 0;
+  height: 40px;
+  padding: 8px 12px;
   border: 1px solid #ccc;
-  border-radius: 10px;
+  border-radius: 8px;
   font: inherit;
+  font-size: 14px;
+}
+#vb-pay {
+  display: block;
+  min-width: 0;
+  min-height: 0;
+  max-width: 100%;
+  justify-self: center;
+  width: auto;
+  margin: 16px auto 0;
+  padding: 10px 28px;
+  border-radius: 8px;
+  font-size: 14px;
 }
 #vb-msg {
   min-height: 1.4em;
   margin: 0;
+  color: #ffb4b4;
+  font-size: 12px;
+  line-height: 1.4;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+/* Site footer */
+.site-footer {
+  padding: 48px 24px 56px;
+  background: var(--purple);
+  color: var(--white);
+  font-family: "DM Sans", sans-serif;
+  font-size: 14px;
+}
+.site-footer-inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1.6fr);
+  align-items: start;
+  gap: 48px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+.site-footer a {
+  color: inherit;
+  text-decoration: none;
+}
+.site-footer a:focus-visible {
+  outline: 2px solid #b57bee;
+  outline-offset: 4px;
+}
+.site-footer-logo {
+  display: block;
+  width: 90px;
+}
+.site-footer-logo img {
+  display: block;
+  width: 90px;
+  height: 90px;
+  object-fit: contain;
+}
+.site-footer ul {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.site-footer .site-footer-socials {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 36px;
+}
+.site-footer-socials a {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+  transition: background 200ms ease;
+}
+.site-footer-socials a:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+.site-footer-socials svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.site-footer-links h2 {
+  font-family: "DM Serif Display", serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.3;
+  letter-spacing: normal;
+  color: var(--white);
+}
+.site-footer-links h2::after {
+  content: "";
+  display: block;
+  width: 28px;
+  height: 1px;
+  margin-top: 10px;
+  background: rgba(255, 255, 255, 0.6);
+}
+.site-footer-links nav {
+  margin-top: 20px;
+}
+.site-footer-links li + li {
+  margin-top: 10px;
+}
+.site-footer-links a:hover {
+  text-decoration: underline;
+}
+.site-footer-quote {
+  position: relative;
+  isolation: isolate;
+}
+.footer-quote {
+  position: relative;
+  margin: 0;
+  padding-top: 28px;
+  max-width: 400px;
+}
+.footer-quote-mark {
+  position: absolute;
+  top: -6px;
+  left: -4px;
+  z-index: 0;
+  font-family: "DM Serif Display", serif;
+  font-size: 190px;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.12);
+  pointer-events: none;
+  user-select: none;
+}
+.footer-quote p {
+  position: relative;
+  z-index: 1;
+  max-width: 380px;
+  margin: 0;
+  font-family: "DM Serif Display", serif;
+  font-size: clamp(20px, 2.2vw, 26px);
+  font-weight: 400;
+  line-height: 1.45;
+  letter-spacing: 0;
+  color: #e9dcff;
+  text-align: left;
+}
+@media (max-width: 899px) {
+  .site-footer-inner {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .site-footer-quote {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 599px) {
+  .site-footer-inner {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 32px;
+    text-align: center;
+  }
+  .site-footer-logo,
+  .site-footer-links h2::after {
+    margin-inline: auto;
+  }
+  .site-footer .site-footer-socials {
+    justify-content: center;
+  }
+  .footer-quote {
+    max-width: 100%;
+  }
+  .footer-quote-mark {
+    font-size: 130px;
+  }
+  .footer-quote p {
+    font-size: 20px;
+  }
 }
