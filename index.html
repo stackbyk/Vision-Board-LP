@@ -15,7 +15,10 @@
       href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400&family=DM+Serif+Display&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@24.5.0/build/css/intlTelInput.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/intl-tel-input@24.5.0/build/css/intlTelInput.css"
+    />
     <link rel="stylesheet" href="styles.css?v=footer-removed" />
     <link rel="stylesheet" href="testimonials.css" />
     <link
@@ -56,13 +59,16 @@
           </button>
         </section>
         <div class="video-wrap">
-          <img class="hero-image" src="images/VB_Shraddha.png" alt="CA Shraddha Kalani smiling with her vision board, with labels 'Build your Vision board' and 'Achieve your goal'" width="780" height="560" fetchpriority="high" />
+          <img
+            class="hero-image"
+            src="images/VB_Shraddha.png"
+            alt="CA Shraddha Kalani smiling with her vision board, with labels 'Build your Vision board' and 'Achieve your goal'"
+            width="780"
+            height="560"
+            fetchpriority="high"
+          />
           <!-- TEMP: video placeholder hidden. Remove the image and hidden attribute when the workshop video is ready. -->
-          <div
-            class="video-preview"
-            id="workshop-preview"
-            hidden
-          >
+          <div class="video-preview" id="workshop-preview" hidden>
             <div class="video-placeholder">
               <svg viewBox="0 0 64 64" aria-hidden="true">
                 <circle cx="32" cy="32" r="30" />
@@ -402,9 +408,17 @@
       <h2 id="faq-heading">Frequently Asked Questions</h2>
       <div class="faq-list"></div>
     </section>
-    <div class="sticky-cta" id="sticky-cta" role="region" aria-label="Reserve your seat" hidden>
+    <div
+      class="sticky-cta"
+      id="sticky-cta"
+      role="region"
+      aria-label="Reserve your seat"
+      hidden
+    >
       <div class="sticky-cta-inner">
-        <button type="button" class="sticky-cta-btn" id="sticky-cta-btn">I Want To Create Mine <span aria-hidden="true">→</span></button>
+        <button type="button" class="sticky-cta-btn" id="sticky-cta-btn">
+          I Want To Create Mine <span aria-hidden="true">→</span>
+        </button>
       </div>
     </div>
     <dialog id="booking-dialog" aria-labelledby="booking-title">
@@ -436,6 +450,26 @@
           autocomplete="tel"
           required
         />
+        <label
+          class="vb-consent"
+          style="
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+            font-size: 14px;
+            text-align: left;
+            cursor: pointer;
+          "
+        >
+          <input
+            id="vb-consent"
+            type="checkbox"
+            style="width: auto; flex: none; margin-top: 3px"
+          />
+          <span
+            >I agree to receive workshop updates on WhatsApp and email.</span
+          >
+        </label>
         <button class="cta" type="submit" id="vb-pay">Proceed to Pay</button>
         <p id="vb-msg" role="status"></p>
       </form>

@@ -197,7 +197,7 @@ RAZORPAY_KEY_ID=rzp_test_xxxxxxxx
 RAZORPAY_KEY_SECRET=xxxxxxxxxxxxxxxx
 ```
 
-Never commit the key secret. Test in Razorpay **Test Mode** before switching to live keys. Amounts are in paise (₹499 = `49900`).
+Never commit the key secret. Test in Razorpay **Test Mode** before switching to live keys. Amounts are in paise (₹999 = `99900`).
 
 All three CTAs should open the same modal, so there's one booking flow and one place to change the price.
 

@@ -1,6 +1,35 @@
-// SVG clipping maps to the visible star bounds (x = 2..22), not glyph whitespace.
+// Match the gold fill to the star's visible area, rather than its bounding box.
+function starFillBoundary(fill) {
+  const points = [[12, 2], [15.09, 8.26], [22, 9.27], [17, 14.14],
+    [18.18, 21.02], [12, 17.77], [5.82, 21.02], [7, 14.14],
+    [2, 9.27], [8.91, 8.26]];
+  const area = (polygon) => Math.abs(polygon.reduce((sum, point, i) => {
+    const next = polygon[(i + 1) % polygon.length];
+    return sum + point[0] * next[1] - next[0] * point[1];
+  }, 0)) / 2;
+  const total = area(points);
+  if (fill <= 0) return 0;
+  if (fill >= 1) return 24;
+  if (fill === 0.5) return 12; // Exact midpoint of the symmetric star.
+  let low = 2, high = 22;
+  for (let iteration = 0; iteration < 32; iteration++) {
+    const boundary = (low + high) / 2;
+    const clipped = [];
+    points.forEach((point, i) => {
+      const next = points[(i + 1) % points.length];
+      if (point[0] <= boundary) clipped.push(point);
+      if ((point[0] <= boundary) !== (next[0] <= boundary)) {
+        const t = (boundary - point[0]) / (next[0] - point[0]);
+        clipped.push([boundary, point[1] + t * (next[1] - point[1])]);
+      }
+    });
+    if (area(clipped) / total < fill) low = boundary;
+    else high = boundary;
+  }
+  return (low + high) / 2;
+}
 let starRatingId = 0;
-function StarRating({ rating = 4.92, max = 5, size = 22 } = {}) {
+function StarRating({ rating = 4.92, max = 5, size = 22, visualRating = rating } = {}) {
   const value = Math.min(max, Math.max(0, rating));
   const instanceId = starRatingId++;
   const container = document.createElement("span");
@@ -10,7 +39,7 @@ function StarRating({ rating = 4.92, max = 5, size = 22 } = {}) {
   const ns = "http://www.w3.org/2000/svg";
   const path = "M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z";
   for (let i = 0; i < max; i++) {
-    const fill = Math.min(1, Math.max(0, value - i));
+    const fill = Math.min(1, Math.max(0, visualRating - i));
     const clipId = `star-clip-${instanceId}-${i}`;
     const star = document.createElementNS(ns, "svg");
     star.setAttribute("viewBox", "0 0 24 24");
@@ -20,10 +49,10 @@ function StarRating({ rating = 4.92, max = 5, size = 22 } = {}) {
     star.innerHTML = `
       <defs>
         <clipPath id="${clipId}" clipPathUnits="userSpaceOnUse">
-          <rect x="0" y="0" width="${2 + fill * 20}" height="24" />
+          <rect x="0" y="0" width="${starFillBoundary(fill)}" height="24" />
         </clipPath>
       </defs>
-      <path d="${path}" fill="rgba(255,255,255,0.35)" />
+      <path d="${path}" fill="var(--purple)" />
       <path d="${path}" fill="currentColor" clip-path="url(#${clipId})" />`;
     container.append(star);
   }
@@ -31,7 +60,8 @@ function StarRating({ rating = 4.92, max = 5, size = 22 } = {}) {
 }
 
 const rating = 4.92;
-document.querySelector(".rating .stars").replaceWith(StarRating({ rating }));
+// Visual treatment: four full stars and one half star; reported rating stays 4.92.
+document.querySelector(".rating .stars").replaceWith(StarRating({ rating, visualRating: 4.5 }));
 document.querySelector(".rating-value").textContent = rating;
 
 const bookingDialog = document.querySelector("#booking-dialog");

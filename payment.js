@@ -5,25 +5,33 @@ const dialog = document.querySelector("#booking-dialog");
 
 // Keep the country dropdown in the dialog's top layer (inline in .iti).
 const phoneInput = document.querySelector("#vb-phone");
-const iti = window.intlTelInput ? window.intlTelInput(phoneInput, {
-  initialCountry: "in",
-  countryOrder: ["in", "us", "gb", "ae", "sg", "au", "ca"],
-  separateDialCode: true,
-  countrySearch: true,
-  fixDropdownWidth: true,
-  i18n: { searchPlaceholder: "Search country" },
-  useFullscreenPopup: false,
-  dropdownContainer: null,
-  utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@24.5.0/build/js/utils.js",
-}) : null;
-const phoneReady = iti ? iti.promise.then(() => true).catch(() => false) : Promise.resolve(false);
-const clearBookingError = () => { msg.textContent = ""; };
+const iti = window.intlTelInput
+  ? window.intlTelInput(phoneInput, {
+      initialCountry: "in",
+      countryOrder: ["in", "us", "gb", "ae", "sg", "au", "ca"],
+      separateDialCode: true,
+      countrySearch: true,
+      fixDropdownWidth: true,
+      i18n: { searchPlaceholder: "Search country" },
+      useFullscreenPopup: false,
+      dropdownContainer: null,
+      utilsScript:
+        "https://cdn.jsdelivr.net/npm/intl-tel-input@24.5.0/build/js/utils.js",
+    })
+  : null;
+const phoneReady = iti
+  ? iti.promise.then(() => true).catch(() => false)
+  : Promise.resolve(false);
+const clearBookingError = () => {
+  msg.textContent = "";
+};
 dialog.addEventListener("close", clearBookingError);
 new MutationObserver(() => {
   clearBookingError();
   if (dialog.open && iti) iti.setCountry("in");
 }).observe(dialog, {
-  attributes: true, attributeFilter: ["open"],
+  attributes: true,
+  attributeFilter: ["open"],
 });
 phoneInput.addEventListener("countrychange", clearBookingError);
 // Fit the inline dropdown within the dialog, opening upward when appropriate.
@@ -51,15 +59,18 @@ form.addEventListener("submit", async (e) => {
     return;
   }
   if (!(await phoneReady)) {
-    msg.textContent = "Phone validation could not load. Please refresh and try again.";
+    msg.textContent =
+      "Phone validation could not load. Please refresh and try again.";
     return;
   }
   if (!iti.isValidNumber()) {
-    msg.textContent = "Please enter a valid phone number for the selected country.";
+    msg.textContent =
+      "Please enter a valid phone number for the selected country.";
     return;
   }
   const phone = iti.getNumber();
   const countryDialCode = iti.getSelectedCountryData().dialCode;
+  const consent = document.querySelector("#vb-consent").checked;
 
   payBtn.disabled = true;
   msg.textContent = "Opening secure payment...";
@@ -68,7 +79,7 @@ form.addEventListener("submit", async (e) => {
     const res = await fetch("/api/create-order", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, phone, countryDialCode }),
+      body: JSON.stringify({ name, email, phone, countryDialCode, consent }),
     });
     if (!res.ok) {
       let reason = "Server error " + res.status;
