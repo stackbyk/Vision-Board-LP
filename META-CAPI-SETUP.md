@@ -27,7 +27,7 @@ An atomic conditional database update claims unsent paid bookings for one worker
 
 Meta HTTP delivery is awaited with a 1.5-second timeout; it is not fire-and-forget in a serverless function. Analytics errors are logged generically and never fail payment verification or a successful webhook. Signed ignored webhook events return 200. Invalid signatures return 401; booking/order persistence failures return 500 so Razorpay can retry. If Meta alone fails after the payment is saved, replay the signed captured webhook or run a controlled server-side retry for paid `capi_sent=false` rows. No scheduler/queue has been added.
 
-The current repository has GA4 but no browser `fbq` Pixel calls. Those files were not supplemented with a Pixel here. If the Pixel is injected elsewhere, its Purchase must use the booking UUID as `eventID` to deduplicate against CAPI.
+The browser Pixel (`1064122738786472`) is initialized in `index.html`, queues PageView on load, and includes a noscript fallback in the body. `payment.js` sends guarded InitiateCheckout and verified Purchase events beside the existing GA4 calls. Both reuse the existing booking UUID as `eventID`; Purchase deduplication uses separate in-memory/localStorage markers. CAPI uses that same UUID as `event_id`. Avoid injecting a second copy of the Pixel elsewhere.
 
 ## Test without real purchases
 

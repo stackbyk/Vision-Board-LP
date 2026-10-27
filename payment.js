@@ -25,6 +25,23 @@ function trackWorkshopEvent(event, { bookingId, value = ANALYTICS_TICKET_PRICE }
   } catch { /* Analytics must never interrupt registration or payment. */ }
 }
 
+const trackedPixelPurchases = new Set();
+function trackMetaEvent(eventName, bookingId, value = ANALYTICS_TICKET_PRICE) {
+  try {
+    if (!bookingId || typeof window.fbq !== "function") return;
+    if (eventName === "Purchase") {
+      const key = `vb_meta_purchase:${bookingId}`;
+      if (trackedPixelPurchases.has(bookingId)) return;
+      try { if (localStorage.getItem(key)) return; } catch {}
+      trackedPixelPurchases.add(bookingId);
+      try { localStorage.setItem(key, "1"); } catch {}
+    }
+    window.fbq("track", eventName, {
+      value, currency: "INR", content_name: "Vision Board Workshop - 31 Oct 2026",
+    }, { eventID: bookingId });
+  } catch { /* A blocked Pixel must not affect registration or payment. */ }
+}
+
 // EDIT SESSION HERE. Add future session entries to this array when needed.
 const SESSION_SLOTS = [
   { value: "31 Oct 2026, 11:30 AM IST", day: "Saturday", label: "31 October · 11:30 AM IST" },
@@ -159,12 +176,13 @@ form.addEventListener("submit", async (e) => {
   const phone = iti.getNumber();
   const countryDialCode = iti.getSelectedCountryData().dialCode;
   const session = form.elements.namedItem("session").value;
-  trackWorkshopEvent("begin_checkout");
   msg.textContent = "Opening secure payment...";
   msg.classList.add("payment-opening");
   try {
-    if (typeof Razorpay !== "function") throw new Error("Checkout has not loaded");
     const bookingId = crypto.randomUUID();
+    trackWorkshopEvent("begin_checkout");
+    trackMetaEvent("InitiateCheckout", bookingId);
+    if (typeof Razorpay !== "function") throw new Error("Checkout has not loaded");
     const res = await fetch("/api/create-order", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -195,6 +213,8 @@ form.addEventListener("submit", async (e) => {
               bookingId,
               value: typeof amount === "number" ? amount / 100 : ANALYTICS_TICKET_PRICE,
             });
+            trackMetaEvent("Purchase", bookingId,
+              typeof amount === "number" ? amount / 100 : ANALYTICS_TICKET_PRICE);
           }
           restoreRegistration(verified && saved === false
             ? "Payment received, but your registration could not be updated. Please contact us with your payment ID: " + response.razorpay_payment_id

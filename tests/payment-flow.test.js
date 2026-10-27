@@ -3,7 +3,7 @@ import vm from "node:vm";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-function setup({ consent = true, fail = false, hold = false, phoneValid = true, verified = true, analyticsBlocked = false, storage = new Map(), href = "https://example.com/", cookies = "" } = {}) {
+function setup({ consent = true, fail = false, hold = false, phoneValid = true, verified = true, analyticsBlocked = false, pixelBlocked = false, pixelMissing = false, storage = new Map(), href = "https://example.com/", cookies = "" } = {}) {
   const elements = new Map();
   function element() {
     const classes = new Set();
@@ -25,6 +25,7 @@ function setup({ consent = true, fail = false, hold = false, phoneValid = true, 
   const dialog = document.querySelector("#booking-dialog");
   const requests = [];
   const analytics = [];
+  const pixelEvents = [];
   let options, opened = 0, uuids = 0, observer, release;
   const phone = { promise: Promise.resolve(), isValidNumber: () => phoneValid,
     getNumber: () => "+919663243142", getSelectedCountryData: () => ({ dialCode: "91" }), setCountry() {} };
@@ -47,8 +48,12 @@ function setup({ consent = true, fail = false, hold = false, phoneValid = true, 
     localStorage: { getItem: key => storage.get(key), setItem: (key, value) => storage.set(key, value) },
     crypto: { randomUUID: () => { uuids++; return "f18f47c0-8df6-452e-9091-32d9e3d87867"; } },
     fetch, queueMicrotask, console: { error() {} } };
+  if (!pixelMissing) context.window.fbq = (...args) => {
+    if (pixelBlocked) throw new Error("Pixel blocked");
+    pixelEvents.push(args);
+  };
   vm.runInNewContext(readFileSync(new URL("../payment.js", import.meta.url), "utf8"), context);
-  return { elements, dialog, requests, analytics, submit: () => form.events.submit({ preventDefault() {} }),
+  return { elements, dialog, requests, analytics, pixelEvents, submit: () => form.events.submit({ preventDefault() {} }),
     release: () => release(), get options() { return options; }, get opened() { return opened; }, get uuids() { return uuids; } };
 }
 
@@ -81,6 +86,7 @@ test("unchecked consent stops before requests or UUID generation", async () => {
   assert.equal(s.requests.length, 0);
   assert.equal(s.uuids, 0);
   assert.equal(s.analytics.length, 0);
+  assert.equal(s.pixelEvents.length, 0);
   assert.match(s.elements.get("#vb-msg").textContent, /Please agree/);
 });
 
@@ -102,6 +108,7 @@ test("invalid name, email, or phone stops before payment preparation", async () 
     assert.equal(s.requests.length, 0);
     assert.equal(s.opened, 0);
     assert.equal(s.analytics.length, 0);
+    assert.equal(s.pixelEvents.length, 0);
     assert.equal(s.elements.get("#vb-pay").disabled, false);
   }
 });
@@ -154,4 +161,60 @@ test("booking carries Meta cookies, fallback click ID and campaign URL unchanged
   const existing = setup({ href, cookies: "_fbc=fb.1.111.original" });
   await existing.submit();
   assert.equal(existing.requests[0].body.fbc, "fb.1.111.original");
+});
+
+test("Pixel checkout and verified Purchase reuse the existing UUID and deduplicate", async () => {
+  const storage = new Map();
+  const s = setup({ storage });
+  await s.submit();
+  assert.equal(s.uuids, 1);
+  assert.equal(s.pixelEvents.length, 1);
+  assert.equal(s.pixelEvents[0][0], "track");
+  assert.equal(s.pixelEvents[0][1], "InitiateCheckout");
+  assert.equal(s.pixelEvents[0][2].value, 999);
+  assert.equal(s.pixelEvents[0][2].currency, "INR");
+  assert.equal(s.pixelEvents[0][2].content_name, "Vision Board Workshop - 31 Oct 2026");
+  assert.equal(s.pixelEvents[0][3].eventID, s.requests[0].body.bookingId);
+  await s.options.handler({ razorpay_payment_id: "payment-1" });
+  await s.options.handler({ razorpay_payment_id: "payment-1" });
+  const purchases = s.pixelEvents.filter(event => event[1] === "Purchase");
+  assert.equal(purchases.length, 1);
+  assert.equal(purchases[0][3].eventID, s.requests[0].body.bookingId);
+  assert.equal(purchases[0][2].value, 999);
+  const refreshed = setup({ storage });
+  await refreshed.submit();
+  await refreshed.options.handler({ razorpay_payment_id: "payment-1" });
+  assert.equal(refreshed.pixelEvents.filter(event => event[1] === "Purchase").length, 0);
+});
+
+test("Pixel never records an unverified purchase and cannot block checkout or GA4", async () => {
+  const s = setup({ verified: false });
+  await s.submit();
+  await s.options.handler({ razorpay_payment_id: "payment-1" });
+  assert.equal(s.pixelEvents.filter(event => event[1] === "Purchase").length, 0);
+  for (const option of [{ pixelBlocked: true }, { pixelMissing: true }]) {
+    const blocked = setup(option);
+    await blocked.submit();
+    assert.equal(blocked.opened, 1);
+    await blocked.options.handler({ razorpay_payment_id: "payment-1" });
+    assert.equal(blocked.elements.get("#vb-pay").disabled, false);
+    assert.equal(blocked.analytics.filter(event => event[1] === "purchase").length, 1);
+  }
+});
+
+test("Pixel base queues initialization and PageView with noindex and noscript intact", () => {
+  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const script = html.match(/<!-- Meta Pixel -->\s*<script>([\s\S]*?)<\/script>/)[1];
+  const scripts = [];
+  const context = { document: { createElement: () => ({}), getElementsByTagName: () => [
+    { parentNode: { insertBefore: value => scripts.push(value) } },
+  ] } };
+  context.window = context;
+  vm.runInNewContext(script, context);
+  assert.equal(scripts[0].src, "https://connect.facebook.net/en_US/fbevents.js");
+  assert.equal(context.fbq.queue[0][0], "init");
+  assert.equal(context.fbq.queue[0][1], "1064122738786472");
+  assert.equal(context.fbq.queue[1][1], "PageView");
+  assert.match(html, /name="robots" content="noindex, nofollow"/);
+  assert.match(html, /<noscript><img[\s\S]*?1064122738786472&amp;ev=PageView&amp;noscript=1/);
 });
