@@ -3,7 +3,7 @@ import vm from "node:vm";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-function setup({ consent = true, fail = false, hold = false, phoneValid = true } = {}) {
+function setup({ consent = true, fail = false, hold = false, phoneValid = true, verified = true, analyticsBlocked = false, storage = new Map() } = {}) {
   const elements = new Map();
   function element() {
     const classes = new Set();
@@ -24,6 +24,7 @@ function setup({ consent = true, fail = false, hold = false, phoneValid = true }
   form.elements = { namedItem: () => document.querySelector("#vb-session") };
   const dialog = document.querySelector("#booking-dialog");
   const requests = [];
+  const analytics = [];
   let options, opened = 0, uuids = 0, observer, release;
   const phone = { promise: Promise.resolve(), isValidNumber: () => phoneValid,
     getNumber: () => "+919663243142", getSelectedCountryData: () => ({ dialCode: "91" }), setCountry() {} };
@@ -35,13 +36,19 @@ function setup({ consent = true, fail = false, hold = false, phoneValid = true }
   const fetch = async (url, init) => {
     requests.push({ url, body: JSON.parse(init.body) });
     if (hold) await new Promise(resolve => { release = resolve; });
-    return { ok: !fail, json: async () => ({ orderId: "order-1", keyId: "test-key" }) };
+    return { ok: !fail, json: async () => url.includes("verify-payment")
+      ? { verified, saved: verified }
+      : { orderId: "order-1", keyId: "test-key", amount: 99900 } };
   };
-  const context = { document, window: { intlTelInput: () => phone }, MutationObserver, Razorpay,
+  const context = { document, window: { intlTelInput: () => phone, gtag: (...args) => {
+    if (analyticsBlocked) throw new Error("blocked");
+    analytics.push(args);
+  } }, MutationObserver, Razorpay,
+    localStorage: { getItem: key => storage.get(key), setItem: (key, value) => storage.set(key, value) },
     crypto: { randomUUID: () => { uuids++; return "f18f47c0-8df6-452e-9091-32d9e3d87867"; } },
     fetch, queueMicrotask, console: { error() {} } };
   vm.runInNewContext(readFileSync(new URL("../payment.js", import.meta.url), "utf8"), context);
-  return { elements, dialog, requests, submit: () => form.events.submit({ preventDefault() {} }),
+  return { elements, dialog, requests, analytics, submit: () => form.events.submit({ preventDefault() {} }),
     release: () => release(), get options() { return options; }, get opened() { return opened; }, get uuids() { return uuids; } };
 }
 
@@ -73,6 +80,7 @@ test("unchecked consent stops before requests or UUID generation", async () => {
   await s.submit();
   assert.equal(s.requests.length, 0);
   assert.equal(s.uuids, 0);
+  assert.equal(s.analytics.length, 0);
   assert.match(s.elements.get("#vb-msg").textContent, /Please agree/);
 });
 
@@ -93,6 +101,40 @@ test("invalid name, email, or phone stops before payment preparation", async () 
     await s.submit();
     assert.equal(s.requests.length, 0);
     assert.equal(s.opened, 0);
+    assert.equal(s.analytics.length, 0);
     assert.equal(s.elements.get("#vb-pay").disabled, false);
   }
+});
+
+test("GA4 checkout follows validation; purchase follows verification and deduplicates across reload", async () => {
+  const storage = new Map();
+  const s = setup({ storage });
+  await s.submit();
+  assert.equal(s.analytics.length, 1);
+  assert.equal(s.analytics[0][1], "begin_checkout");
+  const checkout = s.analytics[0][2];
+  assert.equal(checkout.value, 999);
+  assert.equal(checkout.currency, "INR");
+  assert.equal(checkout.items[0].item_name, "Vision Board Workshop - 31 Oct 2026");
+  const response = { razorpay_payment_id: "payment-1" };
+  await s.options.handler(response);
+  await s.options.handler(response);
+  assert.equal(s.analytics.filter(event => event[1] === "purchase").length, 1);
+  assert.equal(s.analytics[1][2].transaction_id, s.requests[0].body.bookingId);
+  const refreshed = setup({ storage });
+  await refreshed.submit();
+  await refreshed.options.handler(response);
+  assert.equal(refreshed.analytics.filter(event => event[1] === "purchase").length, 0);
+});
+
+test("unverified payment never emits purchase; blocked analytics does not stop checkout", async () => {
+  const s = setup({ verified: false });
+  await s.submit();
+  await s.options.handler({ razorpay_payment_id: "payment-1" });
+  assert.equal(s.analytics.filter(event => event[1] === "purchase").length, 0);
+  const blocked = setup({ analyticsBlocked: true });
+  await blocked.submit();
+  assert.equal(blocked.opened, 1);
+  await blocked.options.handler({ razorpay_payment_id: "payment-1" });
+  assert.equal(blocked.elements.get("#vb-pay").disabled, false);
 });

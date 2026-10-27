@@ -3,6 +3,28 @@ const msg = document.querySelector("#vb-msg");
 const payBtn = document.querySelector("#vb-pay");
 const dialog = document.querySelector("#booking-dialog");
 
+// Analytics only: keep this display price aligned with server AMOUNT_PAISE (₹999).
+const ANALYTICS_TICKET_PRICE = 999;
+const trackedPurchases = new Set();
+function trackWorkshopEvent(event, { bookingId, value = ANALYTICS_TICKET_PRICE } = {}) {
+  try {
+    if (typeof window.gtag !== "function") return;
+    if (event === "purchase") {
+      const key = `vb_ga4_purchase:${bookingId}`;
+      if (trackedPurchases.has(bookingId)) return;
+      try { if (localStorage.getItem(key)) return; } catch {}
+      trackedPurchases.add(bookingId);
+      try { localStorage.setItem(key, "1"); } catch {}
+    }
+    window.gtag("event", event, {
+      ...(event === "purchase" ? { transaction_id: bookingId } : {}),
+      value,
+      currency: "INR",
+      items: [{ item_name: "Vision Board Workshop - 31 Oct 2026", price: value, quantity: 1 }],
+    });
+  } catch { /* Analytics must never interrupt registration or payment. */ }
+}
+
 // EDIT SESSION HERE. Add future session entries to this array when needed.
 const SESSION_SLOTS = [
   { value: "31 Oct 2026, 11:30 AM IST", day: "Saturday", label: "31 October · 11:30 AM IST" },
@@ -121,6 +143,7 @@ form.addEventListener("submit", async (e) => {
   const phone = iti.getNumber();
   const countryDialCode = iti.getSelectedCountryData().dialCode;
   const session = form.elements.namedItem("session").value;
+  trackWorkshopEvent("begin_checkout");
   msg.textContent = "Opening secure payment...";
   msg.classList.add("payment-opening");
   try {
@@ -132,7 +155,7 @@ form.addEventListener("submit", async (e) => {
       body: JSON.stringify({ bookingId, name, email, phone, countryDialCode, consent, session }),
     });
     if (!res.ok) throw new Error("Could not prepare payment");
-    const { orderId, keyId } = await res.json();
+    const { orderId, keyId, amount } = await res.json();
     let paymentCompleted = false;
     const rzp = new Razorpay({
       key: keyId,
@@ -151,6 +174,12 @@ form.addEventListener("submit", async (e) => {
             body: JSON.stringify({ ...response, bookingId }),
           });
           const { verified, saved } = await v.json();
+          if (v.ok && verified === true) {
+            trackWorkshopEvent("purchase", {
+              bookingId,
+              value: typeof amount === "number" ? amount / 100 : ANALYTICS_TICKET_PRICE,
+            });
+          }
           restoreRegistration(verified && saved === false
             ? "Payment received, but your registration could not be updated. Please contact us with your payment ID: " + response.razorpay_payment_id
             : verified
