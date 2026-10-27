@@ -3,6 +3,31 @@ const msg = document.querySelector("#vb-msg");
 const payBtn = document.querySelector("#vb-pay");
 const dialog = document.querySelector("#booking-dialog");
 
+// EDIT SESSION HERE. Add future session entries to this array when needed.
+const SESSION_SLOTS = [
+  { value: "31 Oct 2026, 11:30 AM IST", day: "Saturday", label: "31 October · 11:30 AM IST" },
+];
+const SELECTED_SLOT = SESSION_SLOTS[0].value;
+document.querySelector("#vb-session").value = SELECTED_SLOT;
+document.querySelector("#booking-session-slots").replaceChildren(
+  ...SESSION_SLOTS.map((slot) => {
+    const card = document.createElement("div");
+    card.className = "booking-session-card";
+    card.setAttribute("role", "group");
+    card.setAttribute("aria-label", `${slot.day}, ${slot.label}, selected session`);
+    const tick = document.createElement("span");
+    tick.className = "booking-session-tick";
+    tick.setAttribute("aria-hidden", "true");
+    tick.textContent = "✓";
+    const day = document.createElement("strong");
+    day.textContent = slot.day;
+    const time = document.createElement("span");
+    time.textContent = slot.label;
+    card.append(tick, day, time);
+    return card;
+  }),
+);
+
 // Keep the country dropdown in the dialog's top layer (inline in .iti).
 const phoneInput = document.querySelector("#vb-phone");
 const iti = window.intlTelInput
@@ -26,9 +51,13 @@ const clearBookingError = () => {
   msg.textContent = "";
 };
 dialog.addEventListener("close", clearBookingError);
+let preserveCountryOnReopen = false;
 new MutationObserver(() => {
   clearBookingError();
-  if (dialog.open && iti) iti.setCountry("in");
+  if (dialog.open) {
+    if (iti && !preserveCountryOnReopen) iti.setCountry("in");
+    preserveCountryOnReopen = false;
+  }
 }).observe(dialog, {
   attributes: true,
   attributeFilter: ["open"],
@@ -49,78 +78,98 @@ phoneInput.addEventListener("open:countrydropdown", () => {
   list.style.maxHeight = `${Math.max(60, Math.min(260, (upward ? above : below) - 44))}px`;
 });
 
+let submissionPending = false;
+function setPaymentBusy(busy) {
+  submissionPending = busy;
+  payBtn.disabled = busy;
+  payBtn.setAttribute("aria-busy", String(busy));
+  msg.classList.remove("payment-opening");
+}
+function restoreRegistration(message) {
+  preserveCountryOnReopen = true;
+  if (!dialog.open) dialog.showModal();
+  setPaymentBusy(false);
+  // Let the existing open/close observers clear old errors first.
+  queueMicrotask(() => { msg.textContent = message; });
+}
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
+  if (submissionPending) return;
   const name = document.querySelector("#vb-name").value.trim();
   const email = document.querySelector("#vb-email").value.trim();
-
-  if (!name || !/^\S+@\S+\.\S+$/.test(email)) {
+  const consent = document.querySelector("#vb-consent").checked;
+  if (name.length < 2 || name.length > 100 || email.length > 150 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     msg.textContent = "Please enter your name and a valid email.";
     return;
   }
+  if (!consent) {
+    msg.textContent = "Please agree to receive workshop updates on WhatsApp and email.";
+    return;
+  }
+  // Lock before awaiting phone utils so rapid clicks cannot start two requests.
+  setPaymentBusy(true);
   if (!(await phoneReady)) {
-    msg.textContent =
-      "Phone validation could not load. Please refresh and try again.";
+    setPaymentBusy(false);
+    msg.textContent = "Phone validation could not load. Please refresh and try again.";
     return;
   }
   if (!iti.isValidNumber()) {
-    msg.textContent =
-      "Please enter a valid phone number for the selected country.";
+    setPaymentBusy(false);
+    msg.textContent = "Please enter a valid phone number for the selected country.";
     return;
   }
   const phone = iti.getNumber();
   const countryDialCode = iti.getSelectedCountryData().dialCode;
-  const consent = document.querySelector("#vb-consent").checked;
-
-  payBtn.disabled = true;
+  const session = form.elements.namedItem("session").value;
   msg.textContent = "Opening secure payment...";
-
+  msg.classList.add("payment-opening");
   try {
+    if (typeof Razorpay !== "function") throw new Error("Checkout has not loaded");
+    const bookingId = crypto.randomUUID();
     const res = await fetch("/api/create-order", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, phone, countryDialCode, consent }),
+      body: JSON.stringify({ bookingId, name, email, phone, countryDialCode, consent, session }),
     });
-    if (!res.ok) {
-      let reason = "Server error " + res.status;
-      try {
-        reason = (await res.json()).error || reason;
-      } catch {}
-      throw new Error(reason);
-    }
+    if (!res.ok) throw new Error("Could not prepare payment");
     const { orderId, keyId } = await res.json();
-
+    let paymentCompleted = false;
     const rzp = new Razorpay({
       key: keyId,
       order_id: orderId,
       name: "Livin’ My Dream",
       description: "Vision Board Workshop",
       prefill: { name, email, contact: phone },
+      notes: { session, booking_id: bookingId },
       theme: { color: "#472C7D" },
       handler: async (response) => {
-        const v = await fetch("/api/verify-payment", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(response),
-        });
-        const { verified } = await v.json();
-        msg.textContent = verified
-          ? "Payment successful! Check your email for workshop details."
-          : "Payment could not be verified. Please contact us with your payment ID: " +
-            response.razorpay_payment_id;
-        payBtn.disabled = false;
+        paymentCompleted = true;
+        try {
+          const v = await fetch("/api/verify-payment", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...response, bookingId }),
+          });
+          const { verified, saved } = await v.json();
+          restoreRegistration(verified && saved === false
+            ? "Payment received, but your registration could not be updated. Please contact us with your payment ID: " + response.razorpay_payment_id
+            : verified
+            ? "Payment successful! Check your email for workshop details."
+            : "Payment could not be verified. Please contact us with your payment ID: " + response.razorpay_payment_id);
+        } catch {
+          restoreRegistration("Payment verification could not complete. Please contact us with your payment ID: " + response.razorpay_payment_id);
+        }
       },
       modal: {
         ondismiss: () => {
-          msg.textContent = "Payment cancelled.";
-          payBtn.disabled = false;
+          if (!paymentCompleted) restoreRegistration("Payment cancelled.");
         },
       },
     });
+    dialog.close();
     rzp.open();
   } catch (err) {
-    console.error(err);
-    msg.textContent = "Error: " + err.message;
-    payBtn.disabled = false;
+    console.error("Payment preparation failed:", err.message);
+    restoreRegistration("Something went wrong, please try again");
   }
 });

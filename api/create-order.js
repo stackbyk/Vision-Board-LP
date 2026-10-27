@@ -3,12 +3,21 @@ import { createClient } from "@supabase/supabase-js";
 
 const AMOUNT_PAISE = 99900; // ₹999. The price is set only here, on the server.
 const CURRENCY = "INR";
+// Keep aligned with SESSION_SLOTS in payment.js; never trust a client-supplied session.
+const SELECTED_SLOT = "31 Oct 2026, 11:30 AM IST";
+const SLOT_DATETIME = "2026-10-31T11:30:00+05:30";
+
+// Reuse clients across requests in each warm server instance.
+const supabase = process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
+  ? createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY) : null;
+const rzp = process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET
+  ? new Razorpay({ key_id: process.env.RAZORPAY_KEY_ID, key_secret: process.env.RAZORPAY_KEY_SECRET }) : null;
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
 
   try {
-    const { name, email, phone, countryDialCode, consent } = req.body || {};
+    const { name, email, phone, countryDialCode, consent, session, bookingId } = req.body || {};
 
     // 1. Validate inputs
     const cleanName = typeof name === "string" ? name.trim() : "";
@@ -29,89 +38,48 @@ export default async function handler(req, res) {
         .status(400)
         .json({ error: "Please enter a valid international phone number." });
     }
-
-    // Check env vars are present
-    if (
-      !process.env.SUPABASE_URL ||
-      !process.env.SUPABASE_SERVICE_ROLE_KEY ||
-      !process.env.RAZORPAY_KEY_ID ||
-      !process.env.RAZORPAY_KEY_SECRET
-    ) {
-      console.error("Missing environment variables");
-      return res.status(500).json({
-        error: "Server is not configured correctly (missing env vars).",
-      });
+    if (session !== SELECTED_SLOT) {
+      return res.status(400).json({ error: "Please refresh to load the available session." });
     }
 
-    const supabase = createClient(
-      process.env.SUPABASE_URL,
-      process.env.SUPABASE_SERVICE_ROLE_KEY,
-    );
+    if (consent !== true) {
+      return res.status(400).json({ error: "Please agree to receive workshop updates on WhatsApp and email." });
+    }
+    if (typeof bookingId !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(bookingId)) {
+      return res.status(400).json({ error: "Invalid booking reference." });
+    }
+    if (!supabase || !rzp) {
+      return res.status(500).json({ error: "Server is not configured correctly (missing env vars)." });
+    }
 
-    // 2. Save the lead FIRST, as "pending"
-    const { data: booking, error: insertError } = await supabase
-      .from("bookings")
-      .insert({
+    // Neither operation needs the other's result: one call, no insert SELECT.
+    const [saved, order] = await Promise.all([
+      supabase.from("bookings").insert({
+        id: bookingId,
         name: cleanName,
         email: cleanEmail,
         phone,
         country_code: countryDialCode ? String(countryDialCode) : null,
+        slot_label: SELECTED_SLOT,
+        slot_datetime: SLOT_DATETIME,
+        consent: true,
+        payment_status: "pending",
+      }),
+      rzp.orders.create({
         amount: AMOUNT_PAISE,
         currency: CURRENCY,
-        status: "pending",
-        consent: consent === true,
-      })
-      .select("id")
-      .single();
-
-    if (insertError) {
-      console.error("Supabase insert failed:", insertError.message);
-      return res
-        .status(500)
-        .json({ error: "Could not save your details. Please try again." });
+        receipt: "vb_" + bookingId,
+        notes: { booking_id: bookingId, session: SELECTED_SLOT },
+      }),
+    ]);
+    if (saved.error) {
+      console.error("Supabase insert failed:", saved.error.message);
+      return res.status(500).json({ error: "Something went wrong, please try again" });
     }
-
-    // 3. Create the Razorpay order
-    try {
-      const rzp = new Razorpay({
-        key_id: process.env.RAZORPAY_KEY_ID,
-        key_secret: process.env.RAZORPAY_KEY_SECRET,
-      });
-
-      const order = await rzp.orders.create({
-        amount: AMOUNT_PAISE,
-        currency: CURRENCY,
-        receipt: "vb_" + Date.now(),
-        notes: { booking_id: String(booking.id) },
-      });
-
-      // 4. Link the order to the saved lead
-      await supabase
-        .from("bookings")
-        .update({ razorpay_order_id: order.id })
-        .eq("id", booking.id);
-
-      return res.json({
-        orderId: order.id,
-        keyId: process.env.RAZORPAY_KEY_ID,
-        amount: AMOUNT_PAISE,
-        currency: CURRENCY,
-        bookingId: booking.id,
-      });
-    } catch (orderErr) {
-      // The lead stays saved even if Razorpay fails
-      await supabase
-        .from("bookings")
-        .update({ status: "order_failed" })
-        .eq("id", booking.id);
-      throw orderErr;
-    }
+    return res.json({ orderId: order.id, keyId: process.env.RAZORPAY_KEY_ID,
+      amount: AMOUNT_PAISE, currency: CURRENCY, bookingId });
   } catch (err) {
-    console.error("create-order error:", err?.message || err, err?.error || "");
-    res
-      .status(500)
-      .json({
-        error: "Something went wrong starting your payment. Please try again.",
-      });
+    console.error("create-order error:", err?.message || err);
+    return res.status(500).json({ error: "Something went wrong, please try again" });
   }
 }

@@ -1,0 +1,98 @@
+import { readFileSync } from "node:fs";
+import vm from "node:vm";
+import { test } from "node:test";
+import assert from "node:assert/strict";
+
+function setup({ consent = true, fail = false, hold = false, phoneValid = true } = {}) {
+  const elements = new Map();
+  function element() {
+    const classes = new Set();
+    return { value: "", textContent: "", checked: consent, disabled: false, open: true,
+      events: {}, classList: { add: name => classes.add(name), remove: name => classes.delete(name), contains: name => classes.has(name) },
+      setAttribute() {}, append() {}, replaceChildren() {},
+      addEventListener(name, callback) { this.events[name] = callback; },
+      showModal() { this.open = true; queueMicrotask(() => observer?.()); },
+      close() { this.open = false; this.events.close?.(); },
+    };
+  }
+  const document = { querySelector(selector) {
+    if (!elements.has(selector)) elements.set(selector, element());
+    return elements.get(selector);
+  }, createElement: element };
+  for (const [selector, value] of [["#vb-name", "Test Attendee"], ["#vb-email", "test@example.com"], ["#vb-phone", "9663243142"]]) document.querySelector(selector).value = value;
+  const form = document.querySelector("#booking-form");
+  form.elements = { namedItem: () => document.querySelector("#vb-session") };
+  const dialog = document.querySelector("#booking-dialog");
+  const requests = [];
+  let options, opened = 0, uuids = 0, observer, release;
+  const phone = { promise: Promise.resolve(), isValidNumber: () => phoneValid,
+    getNumber: () => "+919663243142", getSelectedCountryData: () => ({ dialCode: "91" }), setCountry() {} };
+  class Razorpay {
+    constructor(config) { options = config; }
+    open() { assert.equal(dialog.open, false); opened++; }
+  }
+  class MutationObserver { constructor(callback) { observer = callback; } observe() {} }
+  const fetch = async (url, init) => {
+    requests.push({ url, body: JSON.parse(init.body) });
+    if (hold) await new Promise(resolve => { release = resolve; });
+    return { ok: !fail, json: async () => ({ orderId: "order-1", keyId: "test-key" }) };
+  };
+  const context = { document, window: { intlTelInput: () => phone }, MutationObserver, Razorpay,
+    crypto: { randomUUID: () => { uuids++; return "f18f47c0-8df6-452e-9091-32d9e3d87867"; } },
+    fetch, queueMicrotask, console: { error() {} } };
+  vm.runInNewContext(readFileSync(new URL("../payment.js", import.meta.url), "utf8"), context);
+  return { elements, dialog, requests, submit: () => form.events.submit({ preventDefault() {} }),
+    release: () => release(), get options() { return options; }, get opened() { return opened; }, get uuids() { return uuids; } };
+}
+
+test("double click makes one request; closes before checkout; cancel restores details", async () => {
+  const s = setup({ hold: true });
+  const pending = s.submit();
+  await s.submit();
+  await new Promise(setImmediate); // Flush the phone-utils readiness promise.
+  assert.equal(s.elements.get("#vb-pay").disabled, true);
+  assert.equal(s.elements.get("#vb-msg").classList.contains("payment-opening"), true);
+  assert.equal(s.requests.length, 1);
+  s.release();
+  await pending;
+  assert.equal(s.uuids, 1);
+  assert.equal(s.requests[0].body.consent, true);
+  assert.equal(s.requests[0].body.bookingId, "f18f47c0-8df6-452e-9091-32d9e3d87867");
+  assert.equal(s.opened, 1);
+  assert.equal(s.dialog.open, false);
+  s.options.modal.ondismiss();
+  await Promise.resolve();
+  assert.equal(s.dialog.open, true);
+  assert.equal(s.elements.get("#vb-pay").disabled, false);
+  assert.equal(s.elements.get("#vb-name").value, "Test Attendee");
+  assert.equal(s.elements.get("#vb-phone").value, "9663243142");
+});
+
+test("unchecked consent stops before requests or UUID generation", async () => {
+  const s = setup({ consent: false });
+  await s.submit();
+  assert.equal(s.requests.length, 0);
+  assert.equal(s.uuids, 0);
+  assert.match(s.elements.get("#vb-msg").textContent, /Please agree/);
+});
+
+test("failed preparation keeps registration open and restores button", async () => {
+  const s = setup({ fail: true });
+  await s.submit();
+  await Promise.resolve();
+  assert.equal(s.opened, 0);
+  assert.equal(s.dialog.open, true);
+  assert.equal(s.elements.get("#vb-pay").disabled, false);
+  assert.equal(s.elements.get("#vb-msg").textContent, "Something went wrong, please try again");
+});
+
+test("invalid name, email, or phone stops before payment preparation", async () => {
+  for (const field of ["#vb-name", "#vb-email", "#vb-phone"]) {
+    const s = setup({ phoneValid: field !== "#vb-phone" });
+    if (field !== "#vb-phone") s.elements.get(field).value = "";
+    await s.submit();
+    assert.equal(s.requests.length, 0);
+    assert.equal(s.opened, 0);
+    assert.equal(s.elements.get("#vb-pay").disabled, false);
+  }
+});

@@ -2,6 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+    <script defer src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#472C7D" />
     <meta
@@ -426,8 +427,13 @@
         &times;
       </button>
       <h2 id="booking-title">Create My Vision Board</h2>
+      <div class="booking-sessions" aria-labelledby="booking-session-label">
+        <p id="booking-session-label" class="booking-session-label">CHOOSE YOUR SESSION</p>
+        <div id="booking-session-slots" class="booking-session-slots"></div>
+      </div>
       <p>Enter your details to reserve your seat.</p>
       <form id="booking-form" novalidate>
+        <input type="hidden" id="vb-session" name="session" />
         <input
           id="vb-name"
           type="text"
@@ -474,7 +480,6 @@
         <p id="vb-msg" role="status"></p>
       </form>
     </dialog>
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script src="script.js?v=faq-1"></script>
     <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@24.5.0/build/js/intlTelInput.min.js"></script>
     <script src="payment.js"></script>

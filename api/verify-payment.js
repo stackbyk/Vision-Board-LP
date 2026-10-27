@@ -1,10 +1,11 @@
 import crypto from "crypto";
+import Razorpay from "razorpay";
 import { createClient } from "@supabase/supabase-js";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
 
-  const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
+  const { razorpay_order_id, razorpay_payment_id, razorpay_signature, bookingId } =
     req.body || {};
 
   if (
@@ -13,7 +14,9 @@ export default async function handler(req, res) {
     typeof razorpay_signature !== "string" ||
     !razorpay_order_id ||
     !razorpay_payment_id ||
-    !razorpay_signature
+    !razorpay_signature ||
+    !["string", "number"].includes(typeof bookingId) ||
+    !String(bookingId)
   ) {
     return res.status(400).json({ verified: false });
   }
@@ -32,8 +35,16 @@ export default async function handler(req, res) {
     return res.json({ verified: false });
   }
 
-  // 2. Mark the booking as paid
+  // 2. Bind the client ID to the server-created order, then update that same row.
   try {
+    const rzp = new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID,
+      key_secret: process.env.RAZORPAY_KEY_SECRET,
+    });
+    const order = await rzp.orders.fetch(razorpay_order_id);
+    if (String(order.notes?.booking_id) !== String(bookingId)) {
+      return res.status(400).json({ verified: false, saved: false });
+    }
     const supabase = createClient(
       process.env.SUPABASE_URL,
       process.env.SUPABASE_SERVICE_ROLE_KEY,
@@ -42,19 +53,21 @@ export default async function handler(req, res) {
     const { error } = await supabase
       .from("bookings")
       .update({
-        status: "paid",
-        razorpay_payment_id,
-        paid_at: new Date().toISOString(),
+        payment_status: "paid",
       })
-      .eq("razorpay_order_id", razorpay_order_id);
+      .eq("id", bookingId)
+      .select("id")
+      .single();
 
     if (error) {
       console.error("Could not mark booking paid:", error.message);
+      return res.status(500).json({ verified: true, saved: false });
     }
   } catch (err) {
     console.error("verify-payment error:", err?.message || err);
+    return res.status(500).json({ verified: true, saved: false });
   }
 
   // The payment is genuine even if the database update had a hiccup
-  return res.json({ verified: true });
+  return res.json({ verified: true, saved: true });
 }
