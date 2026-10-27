@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import Razorpay from "razorpay";
 import { createClient } from "@supabase/supabase-js";
+import { recordCapturedPayment } from "../lib/paid-booking.js";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
@@ -41,8 +42,13 @@ export default async function handler(req, res) {
       key_id: process.env.RAZORPAY_KEY_ID,
       key_secret: process.env.RAZORPAY_KEY_SECRET,
     });
-    const order = await rzp.orders.fetch(razorpay_order_id);
+    const [order, payment] = await Promise.all([
+      rzp.orders.fetch(razorpay_order_id), rzp.payments.fetch(razorpay_payment_id),
+    ]);
     if (String(order.notes?.booking_id) !== String(bookingId)) {
+      return res.status(400).json({ verified: false, saved: false });
+    }
+    if (payment.order_id !== razorpay_order_id || payment.status !== "captured" || payment.currency !== "INR") {
       return res.status(400).json({ verified: false, saved: false });
     }
     const supabase = createClient(
@@ -50,21 +56,9 @@ export default async function handler(req, res) {
       process.env.SUPABASE_SERVICE_ROLE_KEY,
     );
 
-    const { error } = await supabase
-      .from("bookings")
-      .update({
-        payment_status: "paid",
-      })
-      .eq("id", bookingId)
-      .select("id")
-      .single();
-
-    if (error) {
-      console.error("Could not mark booking paid:", error.message);
-      return res.status(500).json({ verified: true, saved: false });
-    }
+    await recordCapturedPayment(supabase, bookingId, payment);
   } catch (err) {
-    console.error("verify-payment error:", err?.message || err);
+    console.error("Payment verification: booking update failed");
     return res.status(500).json({ verified: true, saved: false });
   }
 

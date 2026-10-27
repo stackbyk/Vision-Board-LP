@@ -101,6 +101,22 @@ phoneInput.addEventListener("open:countrydropdown", () => {
 });
 
 let submissionPending = false;
+function bookingAttribution() {
+  try {
+    const url = new URL(window.location.href);
+    const cookie = (name) => {
+      const value = document.cookie.split(";").find(part => part.trim().startsWith(`${name}=`));
+      return value ? decodeURIComponent(value.trim().slice(name.length + 1)) : null;
+    };
+    const fbclid = url.searchParams.get("fbclid");
+    return {
+      fbp: cookie("_fbp"),
+      fbc: cookie("_fbc") || (fbclid ? `fb.1.${Date.now()}.${fbclid}` : null),
+      event_source_url: url.href,
+      ...Object.fromEntries(["utm_source", "utm_medium", "utm_campaign", "utm_content"].map(key => [key, url.searchParams.get(key)])),
+    };
+  } catch { return {}; }
+}
 function setPaymentBusy(busy) {
   submissionPending = busy;
   payBtn.disabled = busy;
@@ -152,7 +168,7 @@ form.addEventListener("submit", async (e) => {
     const res = await fetch("/api/create-order", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ bookingId, name, email, phone, countryDialCode, consent, session }),
+      body: JSON.stringify({ bookingId, name, email, phone, countryDialCode, consent, session, ...bookingAttribution() }),
     });
     if (!res.ok) throw new Error("Could not prepare payment");
     const { orderId, keyId, amount } = await res.json();

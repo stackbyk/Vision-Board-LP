@@ -3,7 +3,7 @@ import vm from "node:vm";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-function setup({ consent = true, fail = false, hold = false, phoneValid = true, verified = true, analyticsBlocked = false, storage = new Map() } = {}) {
+function setup({ consent = true, fail = false, hold = false, phoneValid = true, verified = true, analyticsBlocked = false, storage = new Map(), href = "https://example.com/", cookies = "" } = {}) {
   const elements = new Map();
   function element() {
     const classes = new Set();
@@ -15,7 +15,7 @@ function setup({ consent = true, fail = false, hold = false, phoneValid = true, 
       close() { this.open = false; this.events.close?.(); },
     };
   }
-  const document = { querySelector(selector) {
+  const document = { cookie: cookies, querySelector(selector) {
     if (!elements.has(selector)) elements.set(selector, element());
     return elements.get(selector);
   }, createElement: element };
@@ -40,7 +40,7 @@ function setup({ consent = true, fail = false, hold = false, phoneValid = true, 
       ? { verified, saved: verified }
       : { orderId: "order-1", keyId: "test-key", amount: 99900 } };
   };
-  const context = { document, window: { intlTelInput: () => phone, gtag: (...args) => {
+  const context = { URL, document, window: { location: { href }, intlTelInput: () => phone, gtag: (...args) => {
     if (analyticsBlocked) throw new Error("blocked");
     analytics.push(args);
   } }, MutationObserver, Razorpay,
@@ -137,4 +137,21 @@ test("unverified payment never emits purchase; blocked analytics does not stop c
   assert.equal(blocked.opened, 1);
   await blocked.options.handler({ razorpay_payment_id: "payment-1" });
   assert.equal(blocked.elements.get("#vb-pay").disabled, false);
+});
+
+test("booking carries Meta cookies, fallback click ID and campaign URL unchanged", async () => {
+  const href = "https://example.com/?fbclid=click123&utm_source=meta&utm_medium=paid&utm_campaign=workshop&utm_content=creative1";
+  const s = setup({ href, cookies: "_fbp=fb.1.100.200" });
+  await s.submit();
+  const data = s.requests[0].body;
+  assert.equal(data.fbp, "fb.1.100.200");
+  assert.match(data.fbc, /^fb\.1\.\d{13}\.click123$/);
+  assert.equal(data.event_source_url, href);
+  assert.equal(data.utm_source, "meta");
+  assert.equal(data.utm_medium, "paid");
+  assert.equal(data.utm_campaign, "workshop");
+  assert.equal(data.utm_content, "creative1");
+  const existing = setup({ href, cookies: "_fbc=fb.1.111.original" });
+  await existing.submit();
+  assert.equal(existing.requests[0].body.fbc, "fb.1.111.original");
 });

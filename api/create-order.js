@@ -1,5 +1,6 @@
 import Razorpay from "razorpay";
 import { createClient } from "@supabase/supabase-js";
+import { isIP } from "node:net";
 
 const AMOUNT_PAISE = 99900; // ₹999. The price is set only here, on the server.
 const CURRENCY = "INR";
@@ -53,6 +54,11 @@ export default async function handler(req, res) {
     }
 
     // Neither operation needs the other's result: one call, no insert SELECT.
+    const text = (value, limit = 512) => typeof value === "string" ? value.slice(0, limit) : null;
+    const header = (name) => Array.isArray(req.headers?.[name]) ? req.headers[name][0] : req.headers?.[name];
+    const forwarded = header("x-forwarded-for")?.split(",")[0].trim();
+    const clientIp = forwarded || req.socket?.remoteAddress;
+    const attribution = req.body || {};
     const [saved, order] = await Promise.all([
       supabase.from("bookings").insert({
         id: bookingId,
@@ -64,6 +70,15 @@ export default async function handler(req, res) {
         slot_datetime: SLOT_DATETIME,
         consent: true,
         payment_status: "pending",
+        fbp: text(attribution.fbp),
+        fbc: text(attribution.fbc),
+        client_ip: clientIp && isIP(clientIp) ? clientIp : null,
+        client_user_agent: text(header("user-agent"), 2048),
+        event_source_url: text(attribution.event_source_url, 4096),
+        utm_source: text(attribution.utm_source),
+        utm_medium: text(attribution.utm_medium),
+        utm_campaign: text(attribution.utm_campaign),
+        utm_content: text(attribution.utm_content),
       }),
       rzp.orders.create({
         amount: AMOUNT_PAISE,
