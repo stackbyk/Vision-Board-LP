@@ -44,7 +44,7 @@ function trackMetaEvent(eventName, bookingId, value = ANALYTICS_TICKET_PRICE) {
 
 // EDIT SESSION HERE. Add future session entries to this array when needed.
 const SESSION_SLOTS = [
-  { value: "31 Oct 2026, 11:30 AM IST", day: "Saturday", label: "31 October · 11:30 AM IST" },
+  { value: "31 Oct 2026, 11:30 AM IST", day: "Saturday, 31st Oct", label: "11:30 AM to 1:30 PM IST" },
 ];
 const SELECTED_SLOT = SESSION_SLOTS[0].value;
 document.querySelector("#vb-session").value = SELECTED_SLOT;

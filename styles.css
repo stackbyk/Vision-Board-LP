@@ -1314,12 +1314,12 @@ dialog::backdrop {
 #vb-msg.payment-opening::before { content: ""; display: inline-block; width: 10px; height: 10px; margin-right: 6px; vertical-align: -1px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: payment-spin .7s linear infinite; }
 @keyframes payment-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { #vb-msg.payment-opening::before { animation: none; } }
-.booking-sessions { --slot-bg: #FFBC59; --slot-text: #472C7D; margin: 14px 0; font-family: 'DM Sans', sans-serif; }
-.booking-session-label { margin: 0 0 7px; color: rgb(255 255 255 / .7); font-size: 10px; letter-spacing: .12em; line-height: 1.4; }
-.booking-session-slots { display: flex; justify-content: center; width: 100%; padding: 10px; border: 1px solid rgb(255 255 255 / .2); border-radius: 12px; }
-.booking-session-card { position: relative; width: fit-content; max-width: 100%; min-width: 0; flex: 0 1 auto; padding: 10px 28px; border-radius: 8px; background: var(--slot-bg); color: var(--slot-text); font-family: inherit; text-align: center; overflow-wrap: anywhere; transition: background 200ms ease; }
-.booking-session-card strong { display: block; font-size: 14px; font-weight: 600; line-height: 1.4; }
-.booking-session-card > span:not(.booking-session-tick) { display: block; margin-top: 3px; font-size: 12px; line-height: 1.4; }
+.booking-sessions { --slot-bg: #FFBC59; --slot-text: #472C7D; margin: 12px 0 6px; font-family: 'DM Sans', sans-serif; }
+.booking-session-label { margin: 0; color: rgb(255 255 255 / .7); font-size: 10px; letter-spacing: .12em; line-height: 1.4; }
+.booking-session-slots { display: flex; justify-content: center; padding: 6px; border: 0; border-radius: 0; background: transparent; }
+.booking-session-card { position: relative; display: inline-flex; flex-direction: column; align-items: center; width: auto; max-width: 100%; padding: 8px 22px; border-radius: 8px; background: var(--slot-bg); color: var(--slot-text); font-family: inherit; text-align: center; overflow-wrap: anywhere; }
+.booking-session-card strong { display: block; font-size: 16px; font-weight: 600; line-height: 1.25; }
+.booking-session-card > span:not(.booking-session-tick) { display: block; margin: 0; font-size: 14px; line-height: 1.25; }
 .booking-session-tick { position: absolute; top: 5px; right: 9px; font-size: 13px; line-height: 1; }
 
 #booking-form {
