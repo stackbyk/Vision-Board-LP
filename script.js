@@ -139,12 +139,15 @@ const workshopSteps = [
     const title = document.createElement("h3");
     title.textContent = item.title;
     card.append(label, title);
+    const tag = document.createElement("span");
+    tag.className = "workshop-after-tag";
     if (index >= 4) {
-      const tag = document.createElement("span");
-      tag.className = "workshop-after-tag";
       tag.textContent = "After the workshop";
-      card.append(tag);
+    } else {
+      tag.classList.add("workshop-after-tag-empty");
+      tag.setAttribute("aria-hidden", "true");
     }
+    card.append(tag);
     const image = document.createElement("img");
     image.src = `images/${index + 1}.webp`;
     image.alt = item.imageAlt;
