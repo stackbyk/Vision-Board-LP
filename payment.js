@@ -3,10 +3,22 @@ const msg = document.querySelector("#vb-msg");
 const payBtn = document.querySelector("#vb-pay");
 const dialog = document.querySelector("#booking-dialog");
 
+document.querySelector("#booking-session-slots").addEventListener("change", (event) => {
+  event.target.closest(".booking-session-card").scrollIntoView({
+    inline: "center",
+    block: "nearest",
+    behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
+  });
+});
+
 // Analytics only: keep this display price aligned with server AMOUNT_PAISE (₹999).
 const ANALYTICS_TICKET_PRICE = 999;
+function workshopName(session) {
+  const date = session.split(",", 1)[0];
+  return date ? `Vision Board Workshop - ${date}` : "Vision Board Workshop";
+}
 const trackedPurchases = new Set();
-function trackWorkshopEvent(event, { bookingId, value = ANALYTICS_TICKET_PRICE } = {}) {
+function trackWorkshopEvent(event, { bookingId, session, value = ANALYTICS_TICKET_PRICE } = {}) {
   try {
     if (typeof window.gtag !== "function") return;
     if (event === "purchase") {
@@ -20,13 +32,13 @@ function trackWorkshopEvent(event, { bookingId, value = ANALYTICS_TICKET_PRICE }
       ...(event === "purchase" ? { transaction_id: bookingId } : {}),
       value,
       currency: "INR",
-      items: [{ item_name: "Vision Board Workshop - 31 Oct 2026", price: value, quantity: 1 }],
+      items: [{ item_name: workshopName(session), price: value, quantity: 1 }],
     });
   } catch { /* Analytics must never interrupt registration or payment. */ }
 }
 
 const trackedPixelPurchases = new Set();
-function trackMetaEvent(eventName, bookingId, value = ANALYTICS_TICKET_PRICE) {
+function trackMetaEvent(eventName, bookingId, session, value = ANALYTICS_TICKET_PRICE) {
   try {
     if (!bookingId || typeof window.fbq !== "function") return;
     if (eventName === "Purchase") {
@@ -37,35 +49,10 @@ function trackMetaEvent(eventName, bookingId, value = ANALYTICS_TICKET_PRICE) {
       try { localStorage.setItem(key, "1"); } catch {}
     }
     window.fbq("track", eventName, {
-      value, currency: "INR", content_name: "Vision Board Workshop - 31 Oct 2026",
+      value, currency: "INR", content_name: workshopName(session),
     }, { eventID: bookingId });
   } catch { /* A blocked Pixel must not affect registration or payment. */ }
 }
-
-// EDIT SESSION HERE. Add future session entries to this array when needed.
-const SESSION_SLOTS = [
-  { value: "31 Oct 2026, 11:30 AM IST", day: "Saturday, 31st Oct", label: "11:30 AM to 1:30 PM IST" },
-];
-const SELECTED_SLOT = SESSION_SLOTS[0].value;
-document.querySelector("#vb-session").value = SELECTED_SLOT;
-document.querySelector("#booking-session-slots").replaceChildren(
-  ...SESSION_SLOTS.map((slot) => {
-    const card = document.createElement("div");
-    card.className = "booking-session-card";
-    card.setAttribute("role", "group");
-    card.setAttribute("aria-label", `${slot.day}, ${slot.label}, selected session`);
-    const tick = document.createElement("span");
-    tick.className = "booking-session-tick";
-    tick.setAttribute("aria-hidden", "true");
-    tick.textContent = "✓";
-    const day = document.createElement("strong");
-    day.textContent = slot.day;
-    const time = document.createElement("span");
-    time.textContent = slot.label;
-    card.append(tick, day, time);
-    return card;
-  }),
-);
 
 // Keep the country dropdown in the dialog's top layer (inline in .iti).
 const phoneInput = document.querySelector("#vb-phone");
@@ -180,8 +167,8 @@ form.addEventListener("submit", async (e) => {
   msg.classList.add("payment-opening");
   try {
     const bookingId = crypto.randomUUID();
-    trackWorkshopEvent("begin_checkout");
-    trackMetaEvent("InitiateCheckout", bookingId);
+    trackWorkshopEvent("begin_checkout", { session });
+    trackMetaEvent("InitiateCheckout", bookingId, session);
     if (typeof Razorpay !== "function") throw new Error("Checkout has not loaded");
     const res = await fetch("/api/create-order", {
       method: "POST",
@@ -195,7 +182,7 @@ form.addEventListener("submit", async (e) => {
       key: keyId,
       order_id: orderId,
       name: "Livin’ My Dream",
-      description: "Vision Board Workshop",
+      description: workshopName(session),
       prefill: { name, email, contact: phone },
       notes: { session, booking_id: bookingId },
       theme: { color: "#472C7D" },
@@ -211,9 +198,10 @@ form.addEventListener("submit", async (e) => {
           if (v.ok && verified === true) {
             trackWorkshopEvent("purchase", {
               bookingId,
+              session,
               value: typeof amount === "number" ? amount / 100 : ANALYTICS_TICKET_PRICE,
             });
-            trackMetaEvent("Purchase", bookingId,
+            trackMetaEvent("Purchase", bookingId, session,
               typeof amount === "number" ? amount / 100 : ANALYTICS_TICKET_PRICE);
           }
           restoreRegistration(verified && saved === false

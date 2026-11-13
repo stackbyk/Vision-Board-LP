@@ -1,12 +1,10 @@
 import Razorpay from "razorpay";
 import { createClient } from "@supabase/supabase-js";
 import { isIP } from "node:net";
+import { SESSION_SLOTS } from "../lib/workshop-sessions.js";
 
 const AMOUNT_PAISE = 99900; // ₹999. The price is set only here, on the server.
 const CURRENCY = "INR";
-// Keep aligned with SESSION_SLOTS in payment.js; never trust a client-supplied session.
-const SELECTED_SLOT = "31 Oct 2026, 11:30 AM IST";
-const SLOT_DATETIME = "2026-10-31T11:30:00+05:30";
 
 // Reuse clients across requests in each warm server instance.
 const supabase = process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -39,7 +37,8 @@ export default async function handler(req, res) {
         .status(400)
         .json({ error: "Please enter a valid international phone number." });
     }
-    if (session !== SELECTED_SLOT) {
+    const slot = SESSION_SLOTS.find(({ value }) => value === session);
+    if (!slot) {
       return res.status(400).json({ error: "Please refresh to load the available session." });
     }
 
@@ -66,8 +65,8 @@ export default async function handler(req, res) {
         email: cleanEmail,
         phone,
         country_code: countryDialCode ? String(countryDialCode) : null,
-        slot_label: SELECTED_SLOT,
-        slot_datetime: SLOT_DATETIME,
+        slot_label: slot.value,
+        slot_datetime: slot.datetime,
         consent: true,
         payment_status: "pending",
         fbp: text(attribution.fbp),
@@ -84,7 +83,7 @@ export default async function handler(req, res) {
         amount: AMOUNT_PAISE,
         currency: CURRENCY,
         receipt: "vb_" + bookingId,
-        notes: { booking_id: bookingId, session: SELECTED_SLOT },
+        notes: { booking_id: bookingId, session: slot.value },
       }),
     ]);
     if (saved.error) {

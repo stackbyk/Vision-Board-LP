@@ -27,8 +27,10 @@ create policy booking_form_insert on public.bookings
   for insert to anon, authenticated
   with check (
     payment_status = 'pending'
-    and slot_label = '31 Oct 2026, 11:30 AM IST'
-    and slot_datetime = '2026-10-31T11:30:00+05:30'::timestamptz
+    and (slot_label, slot_datetime) in (
+      ('18 Nov 2026, 8:30 PM IST', '2026-11-18T20:30:00+05:30'::timestamptz),
+      ('22 Nov 2026, 11:30 AM IST', '2026-11-22T11:30:00+05:30'::timestamptz)
+    )
     and consent = true
   );
 
@@ -38,8 +40,10 @@ create policy booking_form_pending_only on public.bookings as restrictive
   for insert to anon, authenticated
   with check (
     payment_status = 'pending'
-    and slot_label = '31 Oct 2026, 11:30 AM IST'
-    and slot_datetime = '2026-10-31T11:30:00+05:30'::timestamptz
+    and (slot_label, slot_datetime) in (
+      ('18 Nov 2026, 8:30 PM IST', '2026-11-18T20:30:00+05:30'::timestamptz),
+      ('22 Nov 2026, 11:30 AM IST', '2026-11-22T11:30:00+05:30'::timestamptz)
+    )
     and consent = true
   );
 

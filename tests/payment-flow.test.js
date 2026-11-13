@@ -2,6 +2,15 @@ import { readFileSync } from "node:fs";
 import vm from "node:vm";
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { SESSION_SLOTS } from "../lib/workshop-sessions.js";
+
+const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+const sessionRadios = [...html.matchAll(/<input class="booking-session-radio"[^>]* value="([^"]+)"( checked)?\s*\/>/g)]
+  .map(([, value, checked]) => ({ value, checked: Boolean(checked) }));
+
+test("the HTML provides all available sessions before scripts run", () => {
+  assert.deepEqual(sessionRadios, SESSION_SLOTS.map(({ value }, index) => ({ value, checked: index === 0 })));
+});
 
 function setup({ consent = true, fail = false, hold = false, phoneValid = true, verified = true, analyticsBlocked = false, pixelBlocked = false, pixelMissing = false, storage = new Map(), href = "https://example.com/", cookies = "" } = {}) {
   const elements = new Map();
@@ -9,7 +18,7 @@ function setup({ consent = true, fail = false, hold = false, phoneValid = true, 
     const classes = new Set();
     return { value: "", textContent: "", checked: consent, disabled: false, open: true,
       events: {}, classList: { add: name => classes.add(name), remove: name => classes.delete(name), contains: name => classes.has(name) },
-      setAttribute() {}, append() {}, replaceChildren() {},
+      setAttribute() {},
       addEventListener(name, callback) { this.events[name] = callback; },
       showModal() { this.open = true; queueMicrotask(() => observer?.()); },
       close() { this.open = false; this.events.close?.(); },
@@ -21,7 +30,8 @@ function setup({ consent = true, fail = false, hold = false, phoneValid = true, 
   }, createElement: element };
   for (const [selector, value] of [["#vb-name", "Test Attendee"], ["#vb-email", "test@example.com"], ["#vb-phone", "9663243142"]]) document.querySelector(selector).value = value;
   const form = document.querySelector("#booking-form");
-  form.elements = { namedItem: () => document.querySelector("#vb-session") };
+  const radios = sessionRadios.map(radio => ({ ...radio }));
+  form.elements = { namedItem: () => ({ value: radios.find(radio => radio.checked)?.value ?? "" }) };
   const dialog = document.querySelector("#booking-dialog");
   const requests = [];
   const analytics = [];
@@ -54,6 +64,7 @@ function setup({ consent = true, fail = false, hold = false, phoneValid = true, 
   };
   vm.runInNewContext(readFileSync(new URL("../payment.js", import.meta.url), "utf8"), context);
   return { elements, dialog, requests, analytics, pixelEvents, submit: () => form.events.submit({ preventDefault() {} }),
+    selectSession: (index) => radios.forEach((radio, i) => { radio.checked = i === index; }),
     release: () => release(), get options() { return options; }, get opened() { return opened; }, get uuids() { return uuids; } };
 }
 
@@ -90,6 +101,18 @@ test("unchecked consent stops before requests or UUID generation", async () => {
   assert.match(s.elements.get("#vb-msg").textContent, /Please agree/);
 });
 
+test("changing the session carries the choice through checkout and purchase", async () => {
+  const s = setup();
+  s.selectSession(1);
+  await s.submit();
+  assert.equal(s.requests[0].body.session, "22 Nov 2026, 11:30 AM IST");
+  assert.equal(s.options.notes.session, s.requests[0].body.session);
+  assert.equal(s.options.description, "Vision Board Workshop - 22 Nov 2026");
+  await s.options.handler({ razorpay_payment_id: "payment-1" });
+  assert.equal(s.analytics[1][2].items[0].item_name, s.options.description);
+  assert.equal(s.pixelEvents[1][2].content_name, s.options.description);
+});
+
 test("failed preparation keeps registration open and restores button", async () => {
   const s = setup({ fail: true });
   await s.submit();
@@ -122,7 +145,7 @@ test("GA4 checkout follows validation; purchase follows verification and dedupli
   const checkout = s.analytics[0][2];
   assert.equal(checkout.value, 999);
   assert.equal(checkout.currency, "INR");
-  assert.equal(checkout.items[0].item_name, "Vision Board Workshop - 31 Oct 2026");
+  assert.equal(checkout.items[0].item_name, "Vision Board Workshop - 18 Nov 2026");
   const response = { razorpay_payment_id: "payment-1" };
   await s.options.handler(response);
   await s.options.handler(response);
@@ -173,7 +196,7 @@ test("Pixel checkout and verified Purchase reuse the existing UUID and deduplica
   assert.equal(s.pixelEvents[0][1], "InitiateCheckout");
   assert.equal(s.pixelEvents[0][2].value, 999);
   assert.equal(s.pixelEvents[0][2].currency, "INR");
-  assert.equal(s.pixelEvents[0][2].content_name, "Vision Board Workshop - 31 Oct 2026");
+  assert.equal(s.pixelEvents[0][2].content_name, "Vision Board Workshop - 18 Nov 2026");
   assert.equal(s.pixelEvents[0][3].eventID, s.requests[0].body.bookingId);
   await s.options.handler({ razorpay_payment_id: "payment-1" });
   await s.options.handler({ razorpay_payment_id: "payment-1" });
@@ -203,7 +226,6 @@ test("Pixel never records an unverified purchase and cannot block checkout or GA
 });
 
 test("Pixel base queues initialization and PageView with noindex and noscript intact", () => {
-  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
   const script = html.match(/<!-- Meta Pixel -->\s*<script>([\s\S]*?)<\/script>/)[1];
   const scripts = [];
   const context = { document: { createElement: () => ({}), getElementsByTagName: () => [
@@ -216,5 +238,5 @@ test("Pixel base queues initialization and PageView with noindex and noscript in
   assert.equal(context.fbq.queue[0][1], "1064122738786472");
   assert.equal(context.fbq.queue[1][1], "PageView");
   assert.match(html, /name="robots" content="noindex, nofollow"/);
-  assert.match(html, /<noscript><img[\s\S]*?1064122738786472&amp;ev=PageView&amp;noscript=1/);
+  assert.match(html, /<noscript\s*><img[\s\S]*?1064122738786472&amp;ev=PageView&amp;noscript=1/);
 });

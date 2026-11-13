@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import crypto from "node:crypto";
 import { isIP } from "node:net";
 import { recordCapturedPayment } from "../lib/paid-booking.js";
+import { SESSION_SLOTS } from "../lib/workshop-sessions.js";
 
 // Isolate the real handlers from all external services and credentials.
 function setup({ saveError = null, insertError = null, deferred = false, paymentStatus = "captured" } = {}) {
@@ -41,18 +42,18 @@ function setup({ saveError = null, insertError = null, deferred = false, payment
     const source = readFileSync(new URL(`../api/${file}`, import.meta.url), "utf8")
       .replace(/^import .*;\r?\n/gm, "")
       .replace("export default async function handler", "async function handler");
-    return new Function("Razorpay", "createClient", "crypto", "process", "console", "isIP", "recordCapturedPayment", `${source}; return handler;`)(
-      Razorpay, createClient, crypto, { env }, { error() {} }, isIP, (db, id, payment) => recordCapturedPayment(db, id, payment, async () => {}),
+    return new Function("Razorpay", "createClient", "crypto", "process", "console", "isIP", "recordCapturedPayment", "SESSION_SLOTS", `${source}; return handler;`)(
+      Razorpay, createClient, crypto, { env }, { error() {} }, isIP, (db, id, payment) => recordCapturedPayment(db, id, payment, async () => {}), SESSION_SLOTS,
     );
   };
   const response = () => ({ code: 200, status(code) { this.code = code; return this; }, json(body) { this.body = body; return this; } });
   const booking = { name: "Test Attendee", email: "test@example.com", phone: "+919663243142",
-    bookingId: "f18f47c0-8df6-452e-9091-32d9e3d87867", countryDialCode: "91", consent: true, session: "31 Oct 2026, 11:30 AM IST" };
+    bookingId: "f18f47c0-8df6-452e-9091-32d9e3d87867", countryDialCode: "91", consent: true, session: "18 Nov 2026, 8:30 PM IST" };
   const payment = {
     bookingId: "f18f47c0-8df6-452e-9091-32d9e3d87867", razorpay_order_id: "order-1", razorpay_payment_id: "payment-1",
     razorpay_signature: crypto.createHmac("sha256", env.RAZORPAY_KEY_SECRET).update("order-1|payment-1").digest("hex"),
   };
-  return { calls, release: () => { releaseInsert(); releaseOrder(); }, create: load("create-order.js"), verify: load("verify-payment.js"), rows, updates, response, booking, payment };
+  return { calls, release: () => { releaseInsert(); releaseOrder(); }, create: load("create-order.js"), verify: load("verify-payment.js"), rows, updates, response, booking, payment, get notes() { return notes; } };
 }
 
 test("one pending row, then paid update by the same ID; no extra schema columns", async () => {
@@ -65,13 +66,33 @@ test("one pending row, then paid update by the same ID; no extra schema columns"
   assert.equal(s.rows[0].payment_status, "pending");
   assert.equal(s.rows[0].consent, true);
   assert.equal(s.rows[0].slot_label, s.booking.session);
-  assert.equal(s.rows[0].slot_datetime, "2026-10-31T11:30:00+05:30");
+  assert.equal(s.rows[0].slot_datetime, "2026-11-18T20:30:00+05:30");
   assert.equal(s.rows[0].country_code, "91");
   const paid = s.response();
   await s.verify({ method: "POST", body: s.payment }, paid);
   assert.deepEqual(paid.body, { verified: true, saved: true });
   assert.deepEqual(s.updates, [{ value: { payment_status: "paid", razorpay_payment_id: "payment-1", amount: 99900 }, column: "id", id: created.body.bookingId }]);
   assert.equal(s.rows.length, 1);
+});
+
+test("each November session is stored and passed to Razorpay; unknown slots are rejected", async () => {
+  for (const [session, datetime] of [
+    ["18 Nov 2026, 8:30 PM IST", "2026-11-18T20:30:00+05:30"],
+    ["22 Nov 2026, 11:30 AM IST", "2026-11-22T11:30:00+05:30"],
+  ]) {
+    const s = setup();
+    const res = s.response();
+    await s.create({ method: "POST", body: { ...s.booking, session } }, res);
+    assert.equal(res.code, 200);
+    assert.equal(s.rows[0].slot_label, session);
+    assert.equal(s.rows[0].slot_datetime, datetime);
+    assert.equal(s.notes.session, session);
+  }
+  const s = setup();
+  const res = s.response();
+  await s.create({ method: "POST", body: { ...s.booking, session: "unavailable" } }, res);
+  assert.equal(res.code, 400);
+  assert.deepEqual(s.calls, []);
 });
 
 test("invalid signature or mismatched booking ID cannot update a row", async () => {
