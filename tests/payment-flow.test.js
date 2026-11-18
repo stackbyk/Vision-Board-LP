@@ -101,9 +101,8 @@ test("unchecked consent stops before requests or UUID generation", async () => {
   assert.match(s.elements.get("#vb-msg").textContent, /Please agree/);
 });
 
-test("changing the session carries the choice through checkout and purchase", async () => {
+test("the default Sunday session carries through checkout and purchase", async () => {
   const s = setup();
-  s.selectSession(1);
   await s.submit();
   assert.equal(s.requests[0].body.session, "22 Nov 2026, 11:30 AM IST");
   assert.equal(s.options.notes.session, s.requests[0].body.session);
@@ -145,7 +144,7 @@ test("GA4 checkout follows validation; purchase follows verification and dedupli
   const checkout = s.analytics[0][2];
   assert.equal(checkout.value, 999);
   assert.equal(checkout.currency, "INR");
-  assert.equal(checkout.items[0].item_name, "Vision Board Workshop - 18 Nov 2026");
+  assert.equal(checkout.items[0].item_name, "Vision Board Workshop - 22 Nov 2026");
   const response = { razorpay_payment_id: "payment-1" };
   await s.options.handler(response);
   await s.options.handler(response);
@@ -196,7 +195,7 @@ test("Pixel checkout and verified Purchase reuse the existing UUID and deduplica
   assert.equal(s.pixelEvents[0][1], "InitiateCheckout");
   assert.equal(s.pixelEvents[0][2].value, 999);
   assert.equal(s.pixelEvents[0][2].currency, "INR");
-  assert.equal(s.pixelEvents[0][2].content_name, "Vision Board Workshop - 18 Nov 2026");
+  assert.equal(s.pixelEvents[0][2].content_name, "Vision Board Workshop - 22 Nov 2026");
   assert.equal(s.pixelEvents[0][3].eventID, s.requests[0].body.bookingId);
   await s.options.handler({ razorpay_payment_id: "payment-1" });
   await s.options.handler({ razorpay_payment_id: "payment-1" });

@@ -6,6 +6,8 @@
   --white: #ffffff;
   --lime: #e1fb62;
   --yellow: #ffbc59;
+  --cta-bg: var(--yellow);
+  --cta-hover-bg: #f5a93a;
   --pink: #cd0067;
   --charcoal: #333333;
   --heading-size: 72px;
@@ -177,13 +179,17 @@ h1 span {
   margin-top: 27px;
   border: 0;
   border-radius: 14px;
-  background: var(--lime);
+  background: var(--cta-bg);
   color: var(--purple);
   cursor: pointer;
   line-height: 1.4;
 }
 .cta:hover {
+  background: var(--cta-hover-bg);
   box-shadow: 0 0 0 3px var(--lavender);
+}
+.cta:active {
+  background: var(--cta-hover-bg);
 }
 :focus-visible {
   outline: 3px solid var(--lavender);
@@ -1334,13 +1340,13 @@ dialog::backdrop {
 #vb-msg.payment-opening::before { content: ""; display: inline-block; width: 10px; height: 10px; margin-right: 6px; vertical-align: -1px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: payment-spin .7s linear infinite; }
 @keyframes payment-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { #vb-msg.payment-opening::before { animation: none; } }
-.booking-sessions { --slot-bg: var(--lime); --slot-text: var(--purple); margin: 12px 0 6px; font-family: 'DM Sans', sans-serif; }
+.booking-sessions { --slot-bg: var(--cta-bg); --slot-text: var(--purple); margin: 12px 0 6px; font-family: 'DM Sans', sans-serif; }
 .booking-session-label { margin: 0; color: rgb(255 255 255 / .7); font-size: 10px; letter-spacing: .12em; line-height: 1.4; }
 .booking-session-slots {
   container-type: inline-size;
   display: flex;
+  justify-content: center;
   flex-flow: row nowrap;
-  gap: 10px;
   box-sizing: border-box;
   width: 100%;
   padding: 6px 0;
@@ -1352,11 +1358,11 @@ dialog::backdrop {
   scrollbar-width: none;
 }
 .booking-session-slots::-webkit-scrollbar { display: none; }
-.booking-session-card { position: relative; display: flex; flex: 1 1 0; align-items: center; justify-content: center; min-width: 0; scroll-snap-align: start; padding: 13px 8px 6px; border: 1px solid var(--slot-bg); border-radius: 8px; color: var(--white); font-family: inherit; text-align: center; cursor: pointer; }
+.booking-session-card { position: relative; display: inline-flex; flex: 0 0 auto; align-items: center; justify-content: center; width: fit-content; max-width: 100%; min-width: 0; scroll-snap-align: start; border: 1px solid var(--slot-bg); color: var(--white); font-family: inherit; line-height: 1.4; text-align: center; cursor: pointer; }
 .booking-session-card:has(.booking-session-radio:checked) { background: var(--slot-bg); color: var(--slot-text); }
 .booking-session-card:has(.booking-session-radio:focus-visible) { outline: 2px solid var(--white); outline-offset: -3px; }
 .booking-session-radio { position: absolute; width: 1px; height: 1px; margin: 0; clip-path: inset(50%); }
-.booking-session-text { font-size: min(13px, 3.5cqi); font-weight: 400; line-height: 1.25; letter-spacing: -.02em; white-space: nowrap; }
+.booking-session-text { font-size: inherit; font-weight: 400; line-height: inherit; letter-spacing: -.02em; white-space: nowrap; }
 .booking-session-tick { visibility: hidden; position: absolute; top: 2px; right: 5px; font-size: 10px; line-height: 1; }
 .booking-session-radio:checked + .booking-session-tick { visibility: visible; }
 
@@ -1384,6 +1390,9 @@ dialog::backdrop {
   justify-self: center;
   width: auto;
   margin: 16px auto 0;
+}
+#vb-pay,
+.booking-session-card {
   padding: 10px 28px;
   border-radius: 8px;
   font-size: 14px;
